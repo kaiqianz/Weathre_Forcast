@@ -1,0 +1,1063 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<script src="http://openlayers.org/api/OpenLayers.js"></script>
+<script>
+window.fbAsyncInit = function() {
+FB.init({
+  appId      : '922256631191353',
+  xfbml      : true,
+  version    : 'v2.5'
+});
+};
+
+(function(d, s, id){
+ var js, fjs = d.getElementsByTagName(s)[0];
+ if (d.getElementById(id)) {return;}
+ js = d.createElement(s); js.id = id;
+ js.src = "//connect.facebook.net/en_US/sdk.js";
+ fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));
+</script>
+<title>Forecast Search</title>
+
+<script language="javascript">
+var place, description, picture; 
+function check(p)
+{
+flag = 1;
+if ( p.StreetAddress.value =="")
+    { 
+    $("#helpBlock1").css('display','block');
+    flag = 0;
+    } 
+if ( p.City.value =="") 
+    { 
+    $("#helpBlock2").css('display','block');
+    flag = 0; 
+    }
+if ( p.State.value =="alert")
+    {
+    $("#helpBlock3").css('display','block');
+    flag = 0;     
+    }
+
+if (flag == 1)
+    {
+        $("#blog").css('display','block');
+        output();
+    }
+
+}
+
+function output()
+{
+
+jQuery(document).ready(function(){
+        $.ajax({
+             type: "get",
+             async: true,
+             url: "http://csci580hw8-env.elasticbeanstalk.com/index.php?StreetAddress="+document.myform.StreetAddress.value+"&City="+document.myform.City.value+"&States="+document.myform.State.value+"&degree="+document.myform.degree.value,
+             dataType: "JSONP",
+             jsonp: "callback",
+             jsonpCallback:"dataHandler",
+             success: function(json){
+                output_tab(json)
+             },
+             error: function(){
+                 alert('fail');
+             }
+         });
+     });
+}
+
+function output_tab(json)
+{
+var icon;
+if (json.currently.icon == "clear-night")
+    {
+        document.getElementById("image").src = "http://cs-server.usc.edu:45678/hw/hw8/images/clear_night.png";
+        picture = "http://cs-server.usc.edu:45678/hw/hw8/images/clear_night.png";
+    }
+else if(json.currently.icon == "clear-day")
+    {
+        document.getElementById("image").src = "http://cs-server.usc.edu:45678/hw/hw8/images/clear.png";
+        picture = "http://cs-server.usc.edu:45678/hw/hw8/images/clear.png";
+    }
+else if(json.currently.icon == "partly-cloudy-day")
+    {
+        document.getElementById("image").src = "http://cs-server.usc.edu:45678/hw/hw8/images/cloud_day.png";
+        picture = "http://cs-server.usc.edu:45678/hw/hw8/images/cloud_day.png";
+    }
+else if(json.currently.icon == "partly-cloudy-night")
+    {
+        document.getElementById("image").src = "http://cs-server.usc.edu:45678/hw/hw8/images/cloud_night.png";
+        picture = "http://cs-server.usc.edu:45678/hw/hw8/images/cloud_night.png";
+    }
+else
+    {
+        document.getElementById("image").src = "http://cs-server.usc.edu:45678/hw/hw8/images/"+json.currently.icon+".png";
+        picture = "http://cs-server.usc.edu:45678/hw/hw8/images/"+json.currently.icon+".png";
+    }
+
+temp = parseFloat(json.currently.precipIntensity);
+if ((temp>=0)&&(temp<0.002)){
+        document.getElementById("t11").innerHTML="None";
+    }
+else if ((temp>=0.002)&&(temp<0.017)){
+        document.getElementById("t11").innerHTML="Very Light";
+    }
+else if ((temp>=0.017)&&(temp<0.1)){
+        document.getElementById("t11").innerHTML="Light";
+    }
+else if ((temp>=0.1)&&(temp<0.4)){
+        document.getElementById("t11").innerHTML="Moderate";
+    }
+else{
+        document.getElementById("t11").innerHTML="Heavy";
+    }
+
+document.getElementById("t12").innerHTML=parseFloat(json.currently.precipProbability)*100+"%";
+
+
+if (document.myform.degree.value == "fahrenheit")
+    {
+        document.getElementById("t13").innerHTML=json.currently.windSpeed.toFixed(2)+"mph";
+        document.getElementById("t14").innerHTML=json.currently.dewPoint.toFixed(2)+"&#176 F";
+        document.getElementById("t16").innerHTML=Math.round(json.currently.visibility)+"mi";
+        document.getElementById("currentlytemperature").innerHTML= Math.round(json.currently.temperature);
+        document.getElementById("currentlytemperatureunit").innerHTML= "&#176 F";
+        document.getElementById("temperaturemin").innerHTML=Math.round(json.daily.data[0].temperatureMin)+"&#176 F";
+        document.getElementById("temperaturemax").innerHTML=Math.round(json.daily.data[0].temperatureMax)+"&#176 F";
+        document.getElementById("t20").innerHTML = "Temp (&#176 F)";
+        description = json.currently.summary + ", " + Math.round(json.currently.temperature) + "°F";
+    }
+else
+    {
+        document.getElementById("t13").innerHTML=json.currently.windSpeed.toFixed(2)+"m/s";
+        document.getElementById("t14").innerHTML=json.currently.dewPoint.toFixed(2)+"&#176 C";
+        document.getElementById("t16").innerHTML=Math.round(json.currently.visibility)+"km";
+        document.getElementById("currentlytemperature").innerHTML= Math.round(json.currently.temperature);
+        document.getElementById("currentlytemperatureunit").innerHTML= "&#176 C";
+        document.getElementById("temperaturemin").innerHTML=Math.round(json.daily.data[0].temperatureMin)+"&#176 C";
+        document.getElementById("temperaturemax").innerHTML=Math.round(json.daily.data[0].temperatureMax)+"&#176 C";
+        document.getElementById("t20").innerHTML = "Temp (&#176 C)";
+        description = json.currently.summary + ", " + Math.round(json.currently.temperature) + "°C";
+    }
+    document.getElementById("t15").innerHTML=parseFloat(json.currently.humidity)*100+"%";
+    document.getElementById("t17").innerHTML=time(json.daily.data[0].sunriseTime,json.offset);
+    document.getElementById("t18").innerHTML=time(json.daily.data[0].sunsetTime,json.offset);
+    document.getElementById("t19").innerHTML=json.currently.summary + " in " + document.myform.City.value + ", " + document.myform.State.value;
+    
+    place = document.myform.City.value + ", " + document.myform.State.value;
+    //Center of map
+    var lonlat = new OpenLayers.LonLat(json.longitude, json.latitude).transform(
+            new OpenLayers.Projection("EPSG:4326"),
+            new OpenLayers.Projection("EPSG:900913"));
+
+    var map = new OpenLayers.Map("basicMap");
+    // Create OSM overlays
+    var mapnik = new OpenLayers.Layer.OSM();
+
+    var layer_cloud = new OpenLayers.Layer.XYZ(
+        "clouds",
+        "http://${s}.tile.openweathermap.org/map/clouds/${z}/${x}/${y}.png",
+        {
+            isBaseLayer: false,
+            opacity: 0.7,
+            sphericalMercator: true
+        }
+    );
+
+    var layer_precipitation = new OpenLayers.Layer.XYZ(
+        "precipitation",
+        "http://${s}.tile.openweathermap.org/map/precipitation/${z}/${x}/${y}.png",
+        {
+            isBaseLayer: false,
+            opacity: 0.7,
+            sphericalMercator: true
+        }
+    );
+
+    map.addLayers([mapnik, layer_precipitation, layer_cloud]);
+    map.setCenter(lonlat, 10 );
+
+for (i = 1;i<25;i++)
+    {
+        var demohtml = "";
+        demohtml = demohtml +"<br><table class=\"table\" style = \"margin:0px\"><tr style=\"background-color:#ffffff\"><th >Wind</th><th >Humidity</th><th >Visibility</th><th>Pressure</th></tr><tr ><td>" + json.hourly.data[i].windSpeed;
+        if (document.myform.degree.value == "fahrenheit")
+            {
+                demohtml += "mph";
+            }
+        else
+            {
+                demohtml += "m/s";
+            }
+        demohtml = demohtml + "</td><td>" + Math.round(parseFloat(json.hourly.data[i].humidity)*100)+"%";
+        demohtml = demohtml + "</td><td>" + json.hourly.data[i].visibility;
+        if (document.myform.degree.value == "fahrenheit")
+            {
+                demohtml += "mi";
+            }
+        else
+            {
+                demohtml += "km";
+            }
+        demohtml = demohtml + "</td><td>" + json.hourly.data[i].pressure;
+        if (document.myform.degree.value == "fahrenheit")
+            {
+                demohtml += "mb";
+            }
+        else
+            {
+                demohtml += "hPa";
+            }
+        demohtml += "</td></tr></table>";
+        document.getElementById("demo"+i).innerHTML = demohtml;
+    }
+
+for (i=1;i<25;i++)
+{
+    for (j=1;j<5;j++)
+    {
+        if (j == 1)
+        { 
+            document.getElementById("h"+i+j).innerHTML = time(json.hourly.data[i].time,json.offset);
+        }
+        else if (j==2)
+        {
+            if (json.hourly.data[i].icon == "clear-night")
+                {
+                    document.getElementById("h"+i+j).src = "http://cs-server.usc.edu:45678/hw/hw8/images/clear_night.png";
+                }
+            else if(json.hourly.data[i].icon == "clear-day")
+                {
+                    document.getElementById("h"+i+j).src = "http://cs-server.usc.edu:45678/hw/hw8/images/clear.png";
+                }
+            else if(json.hourly.data[i].icon == "partly-cloudy-day")
+                {
+                    document.getElementById("h"+i+j).src = "http://cs-server.usc.edu:45678/hw/hw8/images/cloud_day.png";
+                }
+            else if(json.hourly.data[i].icon == "partly-cloudy-night")
+                {
+                    document.getElementById("h"+i+j).src = "http://cs-server.usc.edu:45678/hw/hw8/images/cloud_night.png";
+                }
+            else
+                {
+                    document.getElementById("h"+i+j).src = "http://cs-server.usc.edu:45678/hw/hw8/images/"+json.hourly.data[i].icon+".png";
+                }
+        }
+        else if (j==3)
+        {
+            document.getElementById("h"+i+j).innerHTML = Math.round(parseFloat(json.hourly.data[i].cloudCover)*100)+"%";
+        } 
+        else if (j==4)
+        {
+            document.getElementById("h"+i+j).innerHTML = json.hourly.data[i].temperature.toFixed(2);
+        }
+    }
+}
+
+for (i= 1;i<8;i++)
+    {
+        for (j = 1; j<6;j++)
+        {
+            if (j == 1)
+            {
+                document.getElementById("w"+i+j).innerHTML = day(json.daily.data[i].time,json.offset);
+            }
+            else if (j == 2)
+            {
+                document.getElementById("w"+i+j).innerHTML = month(json.daily.data[i].time,json.offset)+" "+date(json.daily.data[i].time,json.offset);
+            }
+            else if(j == 3)
+            {
+                if (json.daily.data[i].icon == "clear-night")
+                    {
+                        document.getElementById("w"+i+j).src = "http://cs-server.usc.edu:45678/hw/hw8/images/clear_night.png";
+                    }
+                else if(json.daily.data[i].icon == "clear-day")
+                    {
+                        document.getElementById("w"+i+j).src = "http://cs-server.usc.edu:45678/hw/hw8/images/clear.png";
+                    }
+                else if(json.daily.data[i].icon == "partly-cloudy-day")
+                    {
+                        document.getElementById("w"+i+j).src = "http://cs-server.usc.edu:45678/hw/hw8/images/cloud_day.png";
+                    }
+                else if(json.daily.data[i].icon == "partly-cloudy-night")
+                    {
+                        document.getElementById("w"+i+j).src = "http://cs-server.usc.edu:45678/hw/hw8/images/cloud_night.png";
+                    }
+                else
+                    {
+                        document.getElementById("w"+i+j).src = "http://cs-server.usc.edu:45678/hw/hw8/images/"+json.daily.data[i].icon+".png";
+                    }
+            }
+            else if (j == 4)
+            {
+                document.getElementById("w"+i+j).innerHTML = "Min<br>Temp<br><h2>"+Math.round(json.daily.data[i].temperatureMin)+"&#176</h2>";
+            }
+            else if (j == 5)
+            {
+                document.getElementById("w"+i+j).innerHTML = "Max<br>Temp<br><h2>"+Math.round(json.daily.data[i].temperatureMax)+"&#176</h2>";
+            }    
+        }
+    }
+var modalhtml = "";
+for (i=1;i<8;i++)
+    {
+    modalhtml = modalhtml + "<div class=\"modal fade\" id=\"Modal"+i+"\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"myModalLabel\"><div class=\"modal-dialog\" role=\"document\"><div class=\"modal-content\"><div class=\"modal-header\"><button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button><h4 class=\"modal-title\" id=\"myModalLabel\"><font size = \"4\"><b>Weather in ";
+    modalhtml = modalhtml + document.myform.City.value + " on " + month(json.daily.data[i].time,json.offset) + " " + date(json.daily.data[i].time,json.offset) + "</b></font>";
+    if (json.daily.data[i].icon == "clear-night")
+        {
+            modalhtml = modalhtml + "</h4></div><div class=\"modal-body\" style=\"text-align:center\"><image style = \"width:150px;height:150px\" src =http://cs-server.usc.edu:45678/hw/hw8/images/clear_night.png";
+        }
+    else if(json.daily.data[i].icon == "clear-day")
+        {
+            modalhtml = modalhtml + "</h4></div><div class=\"modal-body\" style=\"text-align:center\"><image style = \"width:150px;height:150px\" src =http://cs-server.usc.edu:45678/hw/hw8/images/clear.png";
+        }
+    else if(json.daily.data[i].icon == "partly-cloudy-day")
+        {
+            modalhtml = modalhtml + "</h4></div><div class=\"modal-body\" style=\"text-align:center\"><image style = \"width:150px;height:150px\" src =http://cs-server.usc.edu:45678/hw/hw8/images/cloud_day.png";
+        }
+    else if(json.daily.data[i].icon == "partly-cloudy-night")
+        {
+            modalhtml = modalhtml + "</h4></div><div class=\"modal-body\" style=\"text-align:center\"><image style = \"width:150px;height:150px\" src =http://cs-server.usc.edu:45678/hw/hw8/images/cloud_night.png";
+        }
+    else
+        {
+            modalhtml = modalhtml +  "</h4></div><div class=\"modal-body\" style=\"text-align:center\"><image style = \"width:150px;height:150px\" src =http://cs-server.usc.edu:45678/hw/hw8/images/"+json.daily.data[i].icon+".png";
+        }
+    modalhtml = modalhtml + "></image><br>";
+    modalhtml = modalhtml + "<font size = \"5\"><b>"+day(json.daily.data[i].time,json.offset) + ":</b></font><font size = \"5\" color = \"#ffa600\"><b> " + json.daily.data[i].summary;
+    modalhtml = modalhtml + "</font></b><div class = \"row\"><div class = \"col-md-4\"><font size = \"3\"><b>Sunrise Time</b></font><br>"+time(json.daily.data[i].sunriseTime,json.offset)+"</div>";
+    modalhtml = modalhtml + "<div class = \"col-md-4\"><font size = \"3\"><b>Sunset Time</b></font><br>"+time(json.daily.data[i].sunsetTime,json.offset)+"</div>";
+    modalhtml = modalhtml + "<div class = \"col-md-4\"><font size = \"3\"><b>Humidity</b></font><br>"+time(json.daily.data[i].sunsetTime,json.offset)+"</div></div><div class = \"row\">";
+    if (document.myform.degree.value == "fahrenheit")
+    {
+    modalhtml += "<div class = \"col-md-4\"><font size = \"3\"><b>Wind Speed</b></font><br>" + json.daily.data[i].windSpeed.toFixed(2) +"mph</div>";
+    modalhtml += "<div class = \"col-md-4\"><font size = \"3\"><b>Visibility</b></font><br>" + Math.round(json.daily.data[i].visibility) +"mi</div>";
+    modalhtml += "<div class = \"col-md-4\"><font size = \"3\"><b>Pressure<br></b></font>" + Math.round(json.daily.data[i].pressure) +"mb</div>";
+    }
+    else
+    {
+    modalhtml += "<div class = \"col-md-4\"><font size = \"3\"><b>Wind Speed</b></font><br>" + json.daily.data[i].windSpeed.toFixed(2) +"m/s</div>";
+    modalhtml += "<div class = \"col-md-4\"><font size = \"3\"><b>Visibility</b></font><br>" + Math.round(json.daily.data[i].visibility) +"km</div>";
+    modalhtml += "<div class = \"col-md-4\"><font size = \"3\"><b>Pressure</b></font><br>" + Math.round(json.daily.data[i].pressure) +"hPa</div>";
+    }
+    modalhtml += "</div></div><div class=\"modal-footer\"><button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">Close</button></div></div></div></div>";
+    }
+document.getElementById("modals").innerHTML = modalhtml;
+}
+function day(time,offset)
+{
+    d = new Date(time*1000);
+    utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+    nd = new Date(utc + (3600000*offset));
+    if (nd.getDay() == 1)
+    {
+        return "Monday";
+    }
+    else if (nd.getDay() == 2)
+    {
+        return "TuesDay";
+    }
+    else if (nd.getDay() == 3)
+    {
+        return "Wednesday";
+    }
+    else if (nd.getDay() == 4)
+    {
+        return "Thursday";
+    }
+    else if (nd.getDay() == 5)
+    {
+        return "Friday";
+    }
+    else if (nd.getDay() == 6)
+    {
+        return "Saturday"
+    }
+    else if (nd.getDay() == 0)
+    {
+        return "Sunday";
+    }
+
+}
+
+function month(time,offset)
+{
+    d = new Date(time*1000);
+    utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+    nd = new Date(utc + (3600000*offset));
+    if (nd.getMonth() == 1)
+    {
+        return "Jan";
+    }
+    else if (nd.getMonth() == 2)
+    {
+        return "Feb";
+    }
+    else if (nd.getMonth() == 3)
+    {
+        return "Mar";
+    }
+    else if (nd.getMonth() == 4)
+    {
+        return "Apr";
+    }
+    else if (nd.getMonth() == 5)
+    {
+        return "May";
+    }
+    else if (nd.getMonth() == 6)
+    {
+        return "Jun";
+    }
+    else if (nd.getMonth() == 7)
+    {
+        return "Jul";
+    }
+    else if (nd.getMonth() == 8)
+    {
+        return "Aug";
+    }
+    else if (nd.getMonth() == 9)
+    {
+        return "Sep";
+    }
+    else if (nd.getMonth() == 10)
+    {
+        return "Oct";
+    }else if (nd.getMonth() == 11)
+    {
+        return "Nov";
+    }
+    else if (nd.getMonth() == 12)
+    {
+        return "Dec";
+    }
+}
+
+function date(time,offset)
+{
+    d = new Date(time*1000);
+    utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+    nd = new Date(utc + (3600000*offset));
+    return nd.getDate();
+}
+
+function time(time,offset)
+{
+    d = new Date(time*1000);
+    utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+    nd = new Date(utc + (3600000*offset));
+    hr = nd.getHours();
+    mn = nd.getMinutes();
+    var ampm = 'AM';
+
+
+    if (hr >= 12) {
+        ampm = 'PM';
+    }
+
+    if (hr == 0)
+    {
+        hr = 24;
+    }
+
+    if (hr > 12) {
+        hr = hr - 12;
+    }
+
+    
+
+    if (hr < 10)
+    {
+        hr = "0" + hr;
+    }
+
+    if (mn < 10)
+    {
+        mn = "0" + mn;
+    }
+
+    formatted_time = hr + ':' + mn +' ' + ampm;
+
+    return formatted_time;
+}
+
+function reset()
+{
+     document.myform.City.value = "";
+     document.myform.StreetAddress.value = "";
+     document.myform.State.value = "alert";
+}
+
+function post(){
+FB.ui({
+    method: "feed",
+    picture: picture,
+    name: "Current Weather in " + place,
+    description: description,
+    link: "http://forecast.io/",
+    caption: "WEATHER INFORMATION FROM FORECAST.IO",
+}, function(response){
+    if (!response || response.error_code) {
+                alert("Not Posted");
+            } else {
+                alert("Posted Successfully");
+            }
+      });
+}
+
+</script>
+
+
+<style type="text/css">
+.nav-tabs > li.active > a,
+.nav-tabs > li.active > a:hover,
+.nav-tabs > li.active > a:focus {
+    color: #fff;
+    cursor: default;
+    background-color: #2c70ab;
+    border: 1px solid #dddddd;
+    border-bottom-color: transparent;
+} 
+
+.nav > li > a{
+    text-decoration: none;
+    background-color: #eee;
+}
+
+#tab3
+{
+    background-color:#2f3439;
+}
+@media screen and (max-width: 992px)
+{
+    #tab3{background:rgba(0, 0, 0, 0);}
+}
+</style>
+
+</head>
+
+<div class = "container">
+<body style=background-image:url(http://cs-server.usc.edu:45678/hw/hw8/images/bg.jpg)>
+	<h1 align = "center">Forecase Search</h1>
+    <div class = "row">
+        <div class = "col-md-12 col-lg-12 col-sm-12 col-xs-12" style="background-color:rgba(0, 0, 0, 0.2)">
+    <form class="form-inline" role="form" method = "GET" name ="myform" action="">
+    <div class = "row">
+        <div class=" form-group col-md-3 col-lg-3 col-sm-12 col-xs-12">
+            <label for="streetaddress" style = "color:white">Street Address:<text style="color:red"> *</text></label><br>
+            <input type="text" class="form-control" id ="StreetAddress" name="StreetAddress" style = "width:100%">
+            <span style = "display:none" id="helpBlock1" class="help-block"><font color = "red">Please enter the street address</font></span>
+        </div>
+        <div class="form-group col-md-2 col-lg-2 col-sm-12 col-xs-12">
+            <label for="city" style = "color:white">City:<text style="color:red"> *</text></label><br>
+            <input type="text" class="form-control" id ="City" name="City" style = "width:100%">
+            <span style = "display:none" id="helpBlock2" class="help-block"><font color = "red">Please enter the city</font></span>
+        </div>
+        <div class="form-group col-md-2 col-lg-2 col-sm-12 col-xs-12">
+        <label for="state" style = "color:white">State:<text style="color:red"> *</text></label><br>
+        <select type = "text" class="form-control" id ="State" name = "State" style = "width:100%">
+                <option value = "alert">Please select your state</option>
+                <option value = "AL" >Alabama</option>
+                <option value = "AK">Alaska</option>
+                <option value = "AZ">Arizona</option>
+                <option value = "AR">Arkansas</option>
+                <option value = "CA">California</option>
+                <option value = "CO">Colorado</option>
+                <option value = "CT">Connecticut</option>
+                <option value = "DE">Delware</option>
+                <option value = "DC">District of Columbia</option>
+                <option value = "FL">Florida</option>
+                <option value = "GA">Georgia</option>
+                <option value = "HI">Hawaii</option>
+                <option value = "ID">Idaho</option>
+                <option value = "IL">Illinois</option>
+                <option value = "IN">Indiana</option>
+                <option value = "IA">Iowa</option>
+                <option value = "KS">Kansas</option>
+                <option value = "KY">Kentucky</option>
+                <option value = "LA">Louisana</option>
+                <option value = "ME">Maine</option>
+                <option value = "MD">Maryland</option>
+                <option value = "MA">Massachusetts</option>
+                <option value = "MI">Michigan</option>
+                <option value = "MN">Minnesota</option>
+                <option value = "MS">Mississipi</option>
+                <option value = "MO">Missouri</option>
+                <option value = "MT">Montana</option>
+                <option value = "NE">Nebraska</option>
+                <option value = "NV">Nevada</option>
+                <option value = "NH">New Hampshire</option>
+                <option value = "NJ">New Jersey</option>
+                <option value = "NM">New Mexico</option>
+                <option value = "NY">New York</option>
+                <option value = "NC">North Carolina</option>
+                <option value = "ND">North Dakota</option>
+                <option value = "OH">Ohio</option>
+                <option value = "OK">Oklahoma</option>
+                <option value = "OR">Oregon</option>
+                <option value = "PA">Pennsylvania</option>
+                <option value = "RI">Rhode Island</option>
+                <option value = "SC">South Carolina</option>
+                <option value = "SD">South Dakota</option>
+                <option value = "TN">Tennessee</option>
+                <option value = "TX">Texas</option>
+                <option value = "UT">Utah</option>
+                <option value = "VT">Vermont</option>
+                <option value = "VA">Virginia</option>
+                <option value = "WA">Washington</option>
+                <option value = "WV">West Virginia</option>
+                <option value = "WI">Wisconsin</option>
+                <option value = "WY">Wyoming</option>
+            </select>
+            <span style = "display:none" id="helpBlock3" class="help-block"><font color="red">Please select a state</font></span>
+        </div>
+
+        <div class="form-group col-md-2 col-lg-2 col-sm-12 col-xs-12">
+            <label for="degree" style="color:white">Degree:<font color = "red"> *</font></label><br>
+                <input TYPE="radio" id = "degree" Name="degree" VALUE="fahrenheit" checked>  Fahrenheit</input>
+                <input TYPE="radio" id = "degree" Name="degree" VALUE="celsius">  Celsius</INPUT>
+        </div>
+
+        <div class="form-group col-md-3 col-lg-3 col-sm-12 col-xs-12" style ="text-align:right">
+            <div class = "row" style = "margin-top:30px;margin-right:10px">
+                    <button type="button" name="search" class="btn btn-primary btn-sm" onClick="check(this.form)">
+                        <span class="glyphicon glyphicon-search"></span>  Search
+                    </button>
+                    <button type="button" name="Clear" class="btn btn-default btn-sm" onClick="reset()">
+                        <span class="glyphicon glyphicon-refresh"></span>  Clear
+                    </button>
+            </div>
+            <div class = "row" style = "margin-right:10px">
+                <div>Powered by:<a href = "http://forecast.io" align = "right"><img style="width:80px;height:40px" src="http://cs-server.usc.edu:45678/hw/hw8/images/forecast_logo.png"/></a>
+                </div>    
+            </div>
+        </div>
+    </div>
+	</form>
+    </div>
+    </div>
+    <hr></hr>
+    <div class = "row">
+    <div id = "blog" style = "display:none">
+    <ul class="nav nav-tabs">
+      <li class="active"><a data-toggle="tab" href="#tab1">Right Now</a></li>
+      <li><a data-toggle="tab" href="#tab2">Next 24 Hours</a></li>
+      <li><a data-toggle="tab" href="#tab3">Next 7 Days</a></li>
+    </ul>
+
+    <div class="tab-content">
+        <div id="tab1" class="tab-pane fade in active container">
+            <div class = "row">
+                <div id = "tab1_left" class=" container col-md-6 col-lg-6 col-sm-12 col-xs-12">
+                    <div class = "row" style = "background-color:#f47d7d">
+                        <div style = "height:120px;text-align:center" class="col-md-6 col-lg-6 col-sm-12 col-xs-12"><image id = "image" style="width:100px;height:100px;margin-top:10px"></image></div>
+                        <div class="col-md-6 col-lg-6 col-sm-12 col-xs-12">
+                            <div class = "row">
+                                <div class="col-md-12 col-lg-12 col-sm-12 col-xs-12" style="text-align:center"><font color="white" id="t19"></font></div>
+                                <div class="col-md-12 col-lg-12 col-sm-12 col-xs-12" style="text-align:center">
+                                    <table style="text-align:center;margin:auto;">
+                                        <tr>
+                                            <td valign="top">
+                                                <font size="11" id="currentlytemperature" color = "white"></font>
+                                            </td>
+                                            <td valign="top">
+                                                <font size="1"><br><font><font size="2" id="currentlytemperatureunit" color = "white"></font>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-12 col-lg-12 col-sm-12 col-xs-12" style="text-align:center">
+                                    <div class ="row">
+                                        <div class="col-md-10 col-lg-10 col-sm-10 col-xs-10" style="text-align:center">
+                                            <br>
+                                            <font color="blue" id="temperaturemin" ></font>
+                                            <font color="black">|</font>
+                                            <font color="green" id="temperaturemax"></font>
+                                        </div>
+                                        <div class="col-md-2 col-lg-2 col-sm-2 col-xs-2" style="text-align:center"><image src = "http://cs-server.usc.edu:45678/hw/hw8/images/fb_icon.png" style = "height:35px;width:35px" onclick = "post()"></image></div>
+                                    </div>    
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class = "row" style = "background-color:#f9f9f9">
+                        <div class="col-md-6 col-lg-6 col-sm-6 col-xs-6" style ="margin-top:10px;margin-bottom:10px">Precipitation</div>
+                        <div class="col-md-6 col-lg-6 col-sm-6 col-xs-6" id ="t11" style ="margin-top:10px;margin-bot:10px"></div>
+                    </div>
+                    <div class = "row" style = "background-color:#f2dede">
+                        <div class="col-md-6 col-lg-6 col-sm-6 col-xs-6" style ="margin-top:10px;margin-bottom:10px">Chance of Rain</div>
+                        <div class="col-md-6 col-lg-6 col-sm-6 col-xs-6" id ="t12" style ="margin-top:10px;margin-bot:10px"></div>
+                    </div>
+                    <div class = "row" style = "background-color:#f9f9f9">
+                        <div class="col-md-6 col-lg-6 col-sm-6 col-xs-6" style ="margin-top:10px;margin-bottom:10px">Wind Speed</div>
+                        <div class="col-md-6 col-lg-6 col-sm-6 col-xs-6" id ="t13" style ="margin-top:10px;margin-bot:10px"></div>
+                    </div>
+                    <div class = "row" style = "background-color:#f2dede">
+                        <div class="col-md-6 col-lg-6 col-sm-6 col-xs-6" style ="margin-top:10px;margin-bottom:10px">Dew Point</div>
+                        <div class="col-md-6 col-lg-6 col-sm-6 col-xs-6" id ="t14" style ="margin-top:10px;margin-bot:10px"></div>
+                    </div>
+                    <div class = "row" style = "background-color:#f9f9f9">
+                        <div class="col-md-6 col-lg-6 col-sm-6 col-xs-6" style ="margin-top:10px;margin-bottom:10px">Humidity</div>
+                        <div class="col-md-6 col-lg-6 col-sm-6 col-xs-6" id ="t15" style ="margin-top:10px;margin-bot:10px"></div>
+                    </div>
+                    <div class = "row" style = "background-color:#f2dede">
+                        <div class="col-md-6 col-lg-6 col-sm-6 col-xs-6" style ="margin-top:10px;margin-bottom:10px">Visibility</div>
+                        <div class="col-md-6 col-lg-6 col-sm-6 col-xs-6" id ="t16" style ="margin-top:10px;margin-bot:10px"></div>
+                    </div>
+                    <div class = "row" style = "background-color:#f9f9f9">
+                        <div class="col-md-6 col-lg-6 col-sm-6 col-xs-6" style ="margin-top:10px;margin-bottom:10px">Sunrise</div>
+                        <div class="col-md-6 col-lg-6 col-sm-6 col-xs-6" id ="t17" style ="margin-top:10px;margin-bot:10px"></div>
+                    </div>
+                    <div class = "row" style = "background-color:#f2dede">
+                        <div class="col-md-6 col-lg-6 col-sm-6 col-xs-6" style ="margin-top:10px;margin-bottom:10px">Sunset</div>
+                        <div class="col-md-6 col-lg-6 col-sm-6 col-xs-6" id ="t18" style ="margin-top:10px;margin-bot:10px"></div>
+                    </div>
+                </div> 
+                <div id="tab1_right" class="container col-md-6 col-lg-6 col-sm-12 col-xs-12" style="height:438px;padding:0px;border:2px solid white">
+                    <div id="basicMap" style="height:438px"></div>
+                </div>
+            </div >
+        </div>
+        <div id="tab2" class = "tab-pane fade container" style="background-color:#ffffff;padding-left:0px;padding-right:0px">
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr style="background-color:#2c70ab">
+                    <td>Time</td>
+                    <td>Summary</td>
+                    <td>Cloud Cover</td>
+                    <td id = "t20"></td>
+                    <td>View Details</td>
+                  </tr>
+            </table>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h11"></td>
+                    <td ><image id = "h12" style="width:60px;height:60px"></image></td>
+                    <td id ="h13"></td>
+                    <td id ="h14"></td>
+                    <td><button data-toggle="collapse" data-target="#demo1" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button>
+                    </td>
+                  </tr>
+            </table>
+            <div id = "demo1" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px" aria-expended = "true"></div> 
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr style="background-color:#ffffff">
+                    <td id ="h21"></td>
+                    <td ><image id = "h22" style="width:60px;height:60px"></image></td>
+                    <td id ="h23"></td>
+                    <td id ="h24"></td>
+                    <td><button data-toggle="collapse" data-target="#demo2" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo2" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div> 
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h31"></td>
+                    <td ><image id = "h32" style="width:60px;height:60px"></image></td>
+                    <td id ="h33"></td>
+                    <td id ="h34"></td>
+                    <td><button data-toggle="collapse" data-target="#demo3" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo3" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h41"></td>
+                    <td ><image id = "h42" style="width:60px;height:60px"></image></td>
+                    <td id ="h43"></td>
+                    <td id ="h44"></td>
+                    <td><button data-toggle="collapse" data-target="#demo4" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo4" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h51"></td>
+                    <td ><image id = "h52" style="width:60px;height:60px"></image></td>
+                    <td id ="h53"></td>
+                    <td id ="h54"></td>
+                    <td><button data-toggle="collapse" data-target="#demo5" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo5" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h61"></td>
+                    <td ><image id = "h62" style="width:60px;height:60px"></image></td>
+                    <td id ="h63"></td>
+                    <td id ="h64"></td>
+                    <td><button data-toggle="collapse" data-target="#demo6" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo6" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h71"></td>
+                    <td ><image id = "h72" style="width:60px;height:60px"></image></td>
+                    <td id ="h73"></td>
+                    <td id ="h74"></td>
+                    <td><button data-toggle="collapse" data-target="#demo7" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo7" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h81"></td>
+                    <td ><image id = "h82" style="width:60px;height:60px"></image></td>
+                    <td id ="h83"></td>
+                    <td id ="h84"></td>
+                    <td><button data-toggle="collapse" data-target="#demo8" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo8" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h91"></td>
+                    <td ><image id = "h92" style="width:60px;height:60px"></image></td>
+                    <td id ="h93"></td>
+                    <td id ="h94"></td>
+                    <td><button data-toggle="collapse" data-target="#demo9" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo9" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h101"></td>
+                    <td ><image id = "h102" style="width:60px;height:60px"></image></td>
+                    <td id ="h103"></td>
+                    <td id ="h104"></td>
+                    <td><button data-toggle="collapse" data-target="#demo10" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo10" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h111"></td>
+                    <td ><image id = "h112" style="width:60px;height:60px"></image></td>
+                    <td id ="h113"></td>
+                    <td id ="h114"></td>
+                    <td><button data-toggle="collapse" data-target="#demo11" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo11" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h121"></td>
+                    <td ><image id = "h122" style="width:60px;height:60px"></image></td>
+                    <td id ="h123"></td>
+                    <td id ="h124"></td>
+                    <td><button data-toggle="collapse" data-target="#demo12" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo12" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h131"></td>
+                    <td ><image id = "h132" style="width:60px;height:60px"></image></td>
+                    <td id ="h133"></td>
+                    <td id ="h134"></td>
+                    <td><button data-toggle="collapse" data-target="#demo13" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo13" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h141"></td>
+                    <td ><image id = "h142" style="width:60px;height:60px"></image></td>
+                    <td id ="h143"></td>
+                    <td id ="h144"></td>
+                    <td><button data-toggle="collapse" data-target="#demo14" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo14" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h151"></td>
+                    <td ><image id = "h152" style="width:60px;height:60px"></image></td>
+                    <td id ="h153"></td>
+                    <td id ="h154"></td>
+                    <td><button data-toggle="collapse" data-target="#demo15" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo15" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h161"></td>
+                    <td ><image id = "h162" style="width:60px;height:60px"></image></td>
+                    <td id ="h163"></td>
+                    <td id ="h164"></td>
+                    <td><button data-toggle="collapse" data-target="#demo16" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo16" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h171"></td>
+                    <td ><image id = "h172" style="width:60px;height:60px"></image></td>
+                    <td id ="h173"></td>
+                    <td id ="h174"></td>
+                    <td><button data-toggle="collapse" data-target="#demo17" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo17" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h181"></td>
+                    <td ><image id = "h182" style="width:60px;height:60px"></image></td>
+                    <td id ="h183"></td>
+                    <td id ="h184"></td>
+                    <td><button data-toggle="collapse" data-target="#demo18" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo18" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h191"></td>
+                    <td ><image id = "h192" style="width:60px;height:60px"></image></td>
+                    <td id ="h193"></td>
+                    <td id ="h194"></td>
+                    <td><button data-toggle="collapse" data-target="#demo19" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo19" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h201"></td>
+                    <td ><image id = "h202" style="width:60px;height:60px"></image></td>
+                    <td id ="h203"></td>
+                    <td id ="h204"></td>
+                    <td><button data-toggle="collapse" data-target="#demo20" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo20" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h211"></td>
+                    <td ><image id = "h212" style="width:60px;height:60px"></image></td>
+                    <td id ="h213"></td>
+                    <td id ="h214"></td>
+                    <td><button data-toggle="collapse" data-target="#demo21" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo21" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h221"></td>
+                    <td ><image id = "h222" style="width:60px;height:60px"></image></td>
+                    <td id ="h223"></td>
+                    <td id ="h224"></td>
+                    <td><button data-toggle="collapse" data-target="#demo22" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo22" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h231"></td>
+                    <td ><image id = "h232" style="width:60px;height:60px"></image></td>
+                    <td id ="h233"></td>
+                    <td id ="h234"></td>
+                    <td><button data-toggle="collapse" data-target="#demo23" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo23" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+            <table class="table" style="text-align:center;table-layout:fixed;">
+                  <tr>
+                    <td id ="h241"></td>
+                    <td ><image id = "h242" style="width:60px;height:60px"></image></td>
+                    <td id ="h243"></td>
+                    <td id ="h244"></td>
+                    <td><button data-toggle="collapse" data-target="#demo24" type='button' class='btn btn-sm' style='color: #337ab7;background-color: #fff'><span class="glyphicon glyphicon-plus"></span></button></td>
+                  </tr>
+            </table>
+            <div id = "demo24" class = "collapse" style="background-color:#f0f0f0;padding-left:20px;padding-right:20px;padding-bottom:20px;margin-bottom:20px"></div>
+        </div>
+        <div id = "tab3" class="tab-pane fade container" style = "padding-top:10px;padding-bottom:10px;text-align:center">
+            <div class = "row" style = "color:white">
+                <div class = "col-md-2 col-lg-2 col-sm-12 col-xs-12"></div>
+                <div class = "col-md-1 col-lg-1 col-sm-12 col-xs-12" style = "background-color:#327cb7;border-radius: 1em;margin:5px 5px 5px 5px;text-align:center"  data-toggle="modal" data-target="#Modal1">
+                    <row>
+                        <p id ="w11"></p>
+                        <p id ="w12"><p>
+                        <image id ="w13" style = "height:50px;width:50px"></image>
+                        <p id ="w14"></p>
+                        <p id ="w15"></p>
+                    </row>    
+                </div>
+                <div class = "col-md-1 col-lg-1 col-sm-12 col-xs-12" style = "background-color:#ef423e;border-radius: 1em;margin:5px 5px 5px 5px;text-align:center" data-toggle="modal" data-target="#Modal2">
+                    <row>
+                        <p id ="w21"></p>
+                        <p id ="w22"><p>
+                        <image id ="w23" style = "height:50px;width:50px"></image>
+                        <p id ="w24"></p>
+                        <p id ="w25"></p>
+                    </row>    
+                </div>
+                <div class = "col-md-1 col-lg-1 col-sm-12 col-xs-12" style = "background-color:#e88e48;border-radius: 1em;margin:5px 5px 5px 5px;text-align:center" data-toggle="modal" data-target="#Modal3">
+                    <row>
+                        <p id ="w31"></p>
+                        <p id ="w32"><p>
+                        <image id ="w33" style = "height:50px;width:50px"></image>
+                        <p id ="w34"></p>
+                        <p id ="w35"></p>
+                    </row>    
+                </div>
+                <div class = "col-md-1 col-lg-1 col-sm-12 col-xs-12" style = "background-color:#a7a52e;border-radius: 1em;margin:5px 5px 5px 5px;text-align:center" data-toggle="modal" data-target="#Modal4">
+                    <row>
+                        <p id ="w41"></p>
+                        <p id ="w42"><p>
+                        <image id ="w43" style = "height:50px;width:50px"></image>
+                        <p id ="w44"></p>
+                        <p id ="w45"></p>
+                    </row>    
+                </div>
+                <div class = "col-md-1 col-lg-1 col-sm-12 col-xs-12" style = "background-color:#986ea8;border-radius: 1em;margin:5px 5px 5px 5px;text-align:center" data-toggle="modal" data-target="#Modal5">
+                    <row>
+                        <p id ="w51"></p>
+                        <p id ="w52"><p>
+                        <image id ="w53" style = "height:50px;width:50px"></image>
+                        <p id ="w54"></p>
+                        <p id ="w55"></p>
+                    </row>    
+                </div>
+                <div class = "col-md-1 col-lg-1 col-sm-12 col-xs-12" style = "background-color:#f57b7c;border-radius: 1em;margin:5px 5px 5px 5px;text-align:center" data-toggle="modal" data-target="#Modal6">
+                    <row>
+                        <p id ="w61"></p>
+                        <p id ="w62"><p>
+                        <image id ="w63" style = "height:50px;width:50px"></image>
+                        <p id ="w64"></p>
+                        <p id ="w65"></p>
+                    </row>    
+                </div>
+                <div class = "col-md-1 col-lg-1 col-sm-12 col-xs-12" style = "background-color:#d04270;border-radius: 1em;margin:5px 5px 5px 5px;text-align:center" data-toggle="modal" data-target="#Modal7">
+                    <row>
+                        <p id ="w71"></p>
+                        <p id ="w72"><p>
+                        <image id ="w73" style = "height:50px;width:50px"></image>
+                        <p id ="w74"></p>
+                        <p id ="w75"></p>
+                    </row>    
+                </div>
+                <div class = "col-md-3 col-lg-3 col-sm-12 col-xs-12"></div>
+
+            </div> 
+        </div>
+    </div>
+</div>
+
+</div>
+<div id = "modals">
+</div>
+
+</body>
+</html>

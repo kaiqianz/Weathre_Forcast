@@ -1,0 +1,828 @@
+<html>
+<head>
+<meta http-equiv='Content-Type' content='text/html, charset=utf-8'> 
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<script src="http://openlayers.org/api/OpenLayers.js"></script>
+
+
+
+<script type="text/javascript">
+   window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '522780304553568',
+      xfbml      : true,
+      version    : 'v2.5'
+    });
+  };
+
+  (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "//connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+
+function check(myform)
+{
+    temp = 1;
+    if ( myform.streetaddress.value =="")
+    { 
+        $("#validate1").css('display','block');
+        temp = 0;
+    } 
+    if ( myform.city.value =="") 
+    { 
+        $("#validate2").css('display','block');
+        temp = 0; 
+    }
+    if ( myform.state.value =="def")
+    {   
+        $("#validate3").css('display','block');
+        temp = 0;     
+    }
+
+    if (temp == 1){
+        $("#validate1").css('display','none');
+        $("#validate2").css('display','none');
+        $("#validate3").css('display','none');
+        $("#content").css('display','block');
+        weather();
+    }
+}
+
+var name, picture, description;
+function weather(){
+$(document).ready(function(){
+$("#streetaddress").keyup(function(){
+            if($("#streetaddress").val() == "")
+                $("#validate1").css('display','block');
+            else
+                $("#validate1").css('display','none');
+        });
+
+        $("#city").keyup(function(){
+            if($("#city").val() == "")
+                $("#validate2").css('display','block');
+            else
+                $("#validate2").css('display','none');
+        });
+
+        $("#state").change(function(){
+            if($("#state").val() == "def")
+                $("#validate3").css('display','block');
+            else
+                $("#validate3").css('display','none');
+        });
+
+
+		$.ajax({
+			type: "GET",
+			dataType: "JSONP",
+			jsonp:"callback",
+			jsonpCallback:"back",
+			data:$("#formid").serialize(),
+			url: "http://zhangkaiqiang.elasticbeanstalk.com/hw8.php",
+			success:function(data){
+				init(data);
+				
+	$("#myDiv1").html("<img src='"+data.iconvalue+"' style = \"height:100px;width:200px;\"></img>");
+	$("#myDiv2").html(data.summary+" in "+data.city+", "+data.state);
+	$("#myDiv3").html("<font color='white' size='6'>"+data.temperature+"<span style=\"font-size:13px;vertical-align:text-top\"><b>"+data.tag_value+"</b></span></font>");
+	$("#myDiv4").html(" <font color='blue'>L:</font>"+"<font color='blue'>"+data.temperatureMin+"</font>"+" | "+"<font color='green'>H:</font>"+"<font color='green'>"+data.temperatureMax+"</font>");
+	$("#myDiv5").html("<img src='http://cs-server.usc.edu:45678/hw/hw8/images/fb_icon.png' style=\"height:20px;width:20px;\" onclick = \"post()\"></img>");
+	$("#myDiv6").html(data.precipIntensity);
+	$("#myDiv7").html(data.chanceOfRain);
+	$("#myDiv8").html(data.windSpeed);
+	$("#myDiv9").html(data.dewPoint);
+	$("#myDiv10").html(data.humidity);
+	$("#vis").html(data.visibility);
+	$("#sunrise").html(data.sunriseTime);
+	$("#sunset").html(data.sunsetTime);
+    name = "Current Weather in " +data.city+", "+data.state;
+    picture = data.iconvalue;
+    description = data.summary+", "+data.temperature;
+	for(i=0;i<24;i++){
+		for(j=1;j<5;j++){
+			if(j==1){
+				$("#myDiv"+i+j).html(data.jarr.list[i].daytime);
+
+			}
+			if(j==2){
+				$("#myDiv"+i+j).html("<img src='"+data.jarr.list[i].iconpicture+"' style=\"height:35px;width:40px;\"</img>");
+			}
+			if(j==3){
+				$("#myDiv"+i+j).html(data.jarr.list[i].cloudCover);
+			}
+			if(j==4){
+				$("#myDiv"+i+j).html(data.jarr.list[i].Temp);
+			}
+		}
+	}
+
+		for (i = 0;i<24;i++){
+        var collapse_output = "";
+        collapse_output = collapse_output +"<br><table class=\"table\"><tr style=\"background-color:#fff\"><th >Wind</th><th >Humidity</th><th >Visibility</th><th>Pressure</th></tr><tr ><td>" + data.jarr.list[i].wind;
+        collapse_output = collapse_output + "</td><td>" + data.jarr.list[i].hum;
+        collapse_output = collapse_output + "</td><td>" + data.jarr.list[i].vis;     
+        collapse_output = collapse_output + "</td><td>" + data.jarr.list[i].pressure;
+        collapse_output += "</td></tr></table>";
+        $("#collapse"+(i+1)).html(collapse_output);
+    }
+    	for(i=0;i<7;i++){
+		for(j=1;j<6;j++){
+			if(j==1){
+				$("#day"+i+j).html(data.jarr.list[i].daydate);
+
+			}
+			if(j==2){
+				$("#day"+i+j).html(data.jarr.list[i].month);
+			}
+			if(j==3){
+				$("#day"+i+j).html("<img src='"+data.jarr.list[i].iconmap+"' style=\"height:50px;width:50px;\"</img>");
+			}
+			
+			if(j==4){
+				$("#day"+i+j).html("<font size='5'>"+data.jarr.list[i].temperMin+"</font>");
+			}
+			if(j==5){
+				$("#day"+i+j).html("<font size='5'>"+data.jarr.list[i].temperMax+"</font>");
+			}
+		}
+	}
+	var modal_output = "";
+	for(i=0;i<7;i++){
+		 modal_output = modal_output + "<div class=\"modal fade\" id=\"myModal"+i+"\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"myModalLabel\"><div class=\"modal-dialog\" role=\"document\"><div class=\"modal-content\"><div class=\"modal-header\"><button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button><h4 class=\"modal-title\" id=\"myModalLabel\"><p style=\"text-align:left\"><font size = \"4\"><b>Weather in ";
+		 modal_output = modal_output+data.city+" on "+data.jarr.list[i].month+"</b></font></p>";
+		 modal_output = modal_output+"</h4></div><div class=\"modal-body\" style=\"text-align:center\">"+"<img src='"+data.jarr.list[i].iconmap+"' style=\"height:100px;width:100px;text-align:center;\"></img>";
+		 modal_output = modal_output+"<br><p style=\"text-align:center\"><font size = \"4\"><b>"+data.jarr.list[i].daydate+":</b></font><font size = \"4\" color = \"#ffa600\"><b>"+data.jarr.list[i].sum+"</b></font></p>";
+		 modal_output = modal_output+"<div class=\"row\"  style=\"text-align:center\"><div class = \"col-md-4 col-sm-12 col-xs-12\"><font size = \"3\"><b>Sunrise Time</b></font><br>"+data.jarr.list[i].sunrise+"</div>";
+		 modal_output = modal_output+"<div class = \"col-md-4 col-sm-12 col-xs-12\"><font size = \"3\"><b>Sunset Time</b></font><br>"+data.jarr.list[i].sunset+"</div>";
+		 modal_output = modal_output+"<div class = \"col-md-4 col-sm-12 col-xs-12\"><font size = \"3\"><b>Humidity</b></font><br>"+data.jarr.list[i].dailyhum+"</div></div><div class = \"row\">";
+		 modal_output = modal_output+"<div class = \"col-md-4 col-sm-12 col-xs-12\"><font size = \"3\"><b>Wind Speed</b></font><br>" + data.jarr.list[i].dailywind+"</div>";
+		 modal_output = modal_output+"<div class = \"col-md-4 col-sm-12 col-xs-12\"><font size = \"3\"><b>Visibility</b></font><br>" + data.jarr.list[i].dailyvis+"</div>";
+		 modal_output = modal_output+"<div class = \"col-md-4 col-sm-12 col-xs-12\"><font size = \"3\"><b>Pressure<br></b></font>" + data.jarr.list[i].dailypressure+"</div>";
+		 modal_output =modal_output+"</div></div><div class=\"modal-footer\"><button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">Close</button></div></div></div></div>";
+		 $("#modalshow").html(modal_output);
+	}
+
+	$("#Temp").html(data.temp);
+	$("#content").css("display","block");
+
+
+},
+error:function(){
+	alert($("#formid").serialize());
+}
+});
+
+});
+}
+
+
+function init(data) {
+$("#basicMap").html("");
+   // Initializes the map.
+
+map = new OpenLayers.Map("basicMap");
+      
+var mapnik         = new OpenLayers.Layer.OSM();
+var fromProjection = new OpenLayers.Projection("EPSG:4326");   // Transform from WGS 1984
+var toProjection   = new OpenLayers.Projection("EPSG:900913"); // to Spherical Mercator Projection
+var position       = new OpenLayers.LonLat(data.longitude,data.latitude).transform( fromProjection, toProjection);
+
+var zoom           = 13; 
+var layer_cloud = new OpenLayers.Layer.XYZ(
+	"clouds",
+	"http://${s}.tile.openweathermap.org/map/clouds/${z}/${x}/${y}.png",
+	{
+		isBaseLayer: false,
+		opacity: 0.4,
+		sphericalMercator: true
+	}
+	);
+
+var layer_precipitation = new OpenLayers.Layer.XYZ(
+	"precipitation",
+	"http://${s}.tile.openweathermap.org/map/precipitation/${z}/${x}/${y}.png",
+	{
+		isBaseLayer: false,
+		opacity: 0.4,
+		sphericalMercator: true
+	}
+	);
+map.addLayers([mapnik, layer_precipitation, layer_cloud]);
+map.setCenter(position, zoom );
+}
+
+
+function clearForm(){
+	document.myform.streetaddress.value="";
+    document.myform.city.value="";
+    document.myform.state.value="def";
+    $("#content").css("display","none");
+}
+
+
+function post(){
+FB.ui({
+    method: "feed",
+    picture: picture,
+    name: name,
+    description: description,
+    link: "http://forecast.io/",
+    caption: "WEATHER INFORMATION FROM FORECAST.IO",
+}, function(response){
+    if (!response || response.error) {
+                alert("Not Posted");
+            } else {
+                alert("Posted Successfully");
+            }
+      });
+}
+
+</script>
+
+<style type="text/css">
+h2{
+text-align: center; 
+}
+h4{
+text-align: right;
+}
+.nav-tabs > li.active > a,
+.nav-tabs > li.active > a:hover,
+.nav-tabs > li.active > a:focus{
+background-color: #2c70ab;
+color: #fff;
+}
+.nav > li > a{
+text-decoration: none;
+background-color:#eee;
+}
+</style> 
+</head>
+<body background="http://cs-server.usc.edu:45678/hw/hw8/images/bg.jpg" >
+<div class="container">
+<h2>Forecast Search</h2>
+<div class="row" style="background-color:rgba(0, 0, 0, 0.15);">
+	<div class = "col-md-12 col-sm-12 col-xs-12">
+		<form class="form-inline" role="form" id="formid" name="myform">
+			<div class="row">
+				<div class="form-group col-md-3 col-sm-12 col-xs-12">
+					
+						<label for="streetaddress"><font color="white">Street Address:</font><font color="red">*</font></label>
+						<br>
+						<input type="text" style="width:100%"class="form-control" id="streetaddress" name="streetaddress" placeholder="Enter street address"><span id="validate1" class="validate1" style = "display:none"><font color = "red">Please enter the street address</font></span>
+					
+				</div>
+				<div class="form-group col-md-2 col-sm-12 col-xs-12">
+				
+						<label for="city"><font color="white">City:</font><font color="red">*</font></label>
+						<br>
+						<input type="text" class="form-control" id="city" name="city"style="width:100%" placeholder="Enter the city name"><span id="validate2" class="validate2" style = "display:none"><font color = "red">Please enter the city</font></span>
+					
+				</div>
+				<div class="form-group col-md-2 col-sm-12 col-xs-12">
+				
+						<label for="state"><font color="white">State:</font><font color="red">*</font></label>
+						<br>
+						<select class="form-control"style="width:100%" name="state" id="state">
+							<option value ="def">Select your state...</option>
+							<option value ="AL">Alabama</option>
+							<option value ="AK">Alaska</option>
+							<option value ="AZ">Arizona</option>
+							<option value ="AR">Arkansas</option>
+							<option value ="CA">California</option>
+							<option value ="CO">Colorado</option>
+							<option value ="CT">Connecticut</option>
+							<option value ="DE">Delaware</option>
+							<option value ="DC">District of Columbia</option>
+							<option value ="FL">Florida</option>
+							<option value ="GA">Georgia</option>
+							<option value ="HI">Hawaii</option>
+							<option value ="ID">Idaho</option>
+							<option value ="IL">Illinois</option>
+							<option value ="IN">Indiana</option>
+							<option value ="IA">Iowa</option>
+							<option value ="KS">Kanasas</option>
+							<option value ="KY">Kentucky</option>
+							<option value ="LA">Louisiana</option>
+							<option value ="ME">Maine</option>
+							<option value ="MD">Maryland</option>
+							<option value ="MA">Massachusetts</option>
+							<option value ="MI">Michigan</option>
+							<option value ="MN">Minnesota</option>
+							<option value ="MS">Mississippi</option>
+							<option value ="MO">Missouri</option>
+							<option value ="MT">Montana</option>
+							<option value ="NE">Nebraska</option>
+							<option value ="NV">Nevada</option>
+							<option value ="NH">New Hampshire</option>
+							<option value ="NJ">New Jersey</option>
+							<option value ="NM">New Mexico</option>
+							<option value ="NY">New York</option>
+							<option value ="NC">North Carolina</option>
+							<option value ="ND">North Dakota</option>
+							<option value ="OH">Ohio</option>
+							<option value ="OK">Oklahoma</option>
+							<option value ="OR">Oregon</option>
+							<option value ="PA">Pennsylvania</option>
+							<option value ="RI">Rhode Island</option>
+							<option value ="SC">South Carolina</option>
+							<option value ="SD">South Dakota</option>
+							<option value ="TN">Tennessee</option>
+							<option value ="TX">Texas</option>
+							<option value ="UT">Utah</option>
+							<option value ="VT">Vermont</option>
+							<option value ="VA">Virginia</option>
+							<option value ="WA">Washington</option>
+							<option value ="WV">West Virginia</option>
+							<option value ="WI">Wisconsin</option>
+							<option value ="WY">Wyoming</option>
+						</select> <span id="validate3" class="validate3" style = "display:none"><font color = "red">Please select the state</font></span>
+						
+
+					
+				</div>
+				<div class="form-group col-md-2 col-sm-12 col-xs-12">
+						<label for="degree"><font color="white">Degree:</font><font color="red">*</font></label>
+							<br>
+							<input type="radio" name="degree" value ="Fahrenheit" id="fahrenheit" checked><font color="white">&nbsp;Fahrenheit</font>
+						</input>
+			
+							<input type="radio" name="degree" style="margin-left:15px;"value="Celsius" id="celsius"><font color="white">&nbsp;Celsius</font></input>
+				</div>
+				<div class="form-group col-md-3 col-sm-12 col-xs-12" style="text-align:right;">
+					<div class = "row" style = "margin-top:30px;margin-right:10px">
+						<button type="button" class="btn btn-primary" id="search" name="search" onclick="check(this.form)"><span class="glyphicon glyphicon-search"> </span>&nbsp;Search</button>
+					<button type="button" class="btn btn-default" name="clear"  onclick = "clearForm()"><span class="glyphicon glyphicon-refresh"></span>&nbsp;&nbsp;Clear</button>
+					
+				</div>
+				
+			
+			<h4>Powered by:<a href="http://forecast.io"><img src="http://cs-server.usc.edu:45678/hw/hw8/images/forecast_logo.png" style="width:100px; height:60px; margin-right:10px"></a></h4>
+			</div>
+			</div>
+		</form>
+	</div>
+</div>
+
+	<hr></hr>
+	<div class="row"> 
+		<div style="display:none;" id="content" >
+		<ul class="nav nav-tabs" >
+			<li class="active"><a data-toggle="tab" href="#RightNow">Right Now</a></li>
+			<li><a data-toggle="tab" href="#Next24Hours">Next 24 Hours</a></li>
+			<li><a data-toggle="tab" href="#Next7Days">Next 7 Days</a></li>
+		</ul>
+		<div class="tab-content" id="myTabContent">
+			<div id="RightNow" class="Tab-pane fade in active container">
+				<div class="row">
+					<div id="left_part" class=" container col-md-6 col-sm-12 col-xs-12" >
+						<div class="row" style="background-color:#FA8484">
+							<div class="col-md-6 col-sm-12 col-xs-12" id="myDiv1" style="text-align:center; padding:10px;" >
+							</div>
+							<div class="col-md-6 col-sm-12 col-xs-12">
+								
+								<div id="myDiv2" style="text-align:center ;color:#fff;" >
+								</div>
+								<div id="myDiv3" style="margin-top:10px;text-align:center">
+								</div>
+								<div class="row" style="margin-top:25px;">
+									<div class="col-md-10  col-sm-10 col-xs-10" id="myDiv4" style="padding-left:38%">
+									</div>
+									<div class="col-md-2 col-sm-2 col-xs-2" id="myDiv5" style="text-align:center">
+									</div>
+								</div>
+							</div>						
+						</div>
+						<div class="row" style="background-color:#F4F4F4;">
+							<div class="col-md-6 col-sm-6 col-xs-6"  style="padding:10px;">Precipitation
+							</div>
+							<div class="col-md-6 col-sm-6 col-xs-6" id="myDiv6"  style="padding:10px;">
+							</div>
+						</div>
+						<div class="row" style="background-color:#FAE5EB;">
+							<div class="col-md-6 col-sm-6 col-xs-6"  style="padding:10px;">Chance of Rain
+							</div>
+							<div class="col-md-6 col-sm-6 col-xs-6" id="myDiv7"  style="padding:10px;">
+							</div>
+						</div>
+						<div class="row" style="background-color:#F4F4F4;">
+							<div class="col-md-6 col-sm-6 col-xs-6"  style="padding:10px;">Wind Speed
+							</div>
+							<div class="col-md-6 col-sm-6 col-xs-6" id="myDiv8"  style="padding:10px;">
+							</div>
+						</div>
+						<div class="row" style="background-color:#FAE5EB;">
+							<div class="col-md-6 col-sm-6 col-xs-6"  style="padding:10px;">Dew Point
+							</div>
+							<div class="col-md-6 col-sm-6 col-xs-6" id="myDiv9"  style="padding:10px;">
+							</div>
+						</div>
+						<div class="row" style="background-color:#F4F4F4;">
+							<div class="col-md-6 col-sm-6 col-xs-6"  style="padding:10px;">Humidity
+							</div>
+							<div class="col-md-6 col-sm-6 col-xs-6" id="myDiv10"  style="padding:10px;">
+							</div>
+						</div>
+						<div class="row" style="background-color:#FAE5EB;">
+							<div class="col-md-6 col-sm-6 col-xs-6"  style="padding:10px;">Visibility
+							</div>
+							<div class="col-md-6 col-sm-6 col-xs-6" id="vis"  style="padding:10px;">
+							</div>
+						</div>
+						<div class="row" style="background-color:#F4F4F4;">
+							<div class="col-md-6 col-sm-6 col-xs-6"  style="padding:10px;">Sunrise
+							</div>
+							<div class="col-md-6 col-sm-6 col-xs-6" id="sunrise"  style="padding:10px;">
+							</div>
+						</div>
+						<div class="row" style="background-color:#FAE5EB;">
+							<div class="col-md-6 col-sm-6 col-xs-6"  style="padding:10px;">Sunset
+							</div>
+							<div class="col-md-6 col-sm-6 col-xs-6" id="sunset"  style="padding:10px;">
+							</div>
+						</div>
+					</div>
+					<div class="col-md-6 col-sm-12 col-xs-12"  style="height:440px;padding:0px;border:2px solid white">
+						<div id="basicMap" style="width:100%;height:440px;">
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="tab-pane fade container" id="Next24Hours" style="background-color:#fff;padding:0px;">
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr style="color:#fff;background-color:#2c70ab;"> 
+						<td>Time</td>
+						<td>Summary</td>
+						<td>Cloud Cover</td>
+						<td id="Temp"></td>
+						<td>View Details</td>
+					</tr>
+				</table>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv01"></td>
+						<td id="myDiv02"></td>
+						<td id="myDiv03"></td>
+						<td id ="myDiv04"></td>
+						<td><button class="btn btn-sm" type="button" data-toggle="collapse" aria-expanded="false" data-target="#collapse1" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse1" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv11"></td>
+						<td id="myDiv12"></td>
+						<td id="myDiv13"></td>
+						<td id ="myDiv14"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse2" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse2" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv21"></td>
+						<td id="myDiv22"></td>
+						<td id="myDiv23"></td>
+						<td id ="myDiv24"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse3" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse3" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv31"></td>
+						<td id="myDiv32"></td>
+						<td id="myDiv33"></td>
+						<td id ="myDiv34"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse4" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse4" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv41"></td>
+						<td id="myDiv42"></td>
+						<td id="myDiv43"></td>
+						<td id ="myDiv44"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse5" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse5" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv51"></td>
+						<td id="myDiv52"></td>
+						<td id="myDiv53"></td>
+						<td id ="myDiv54"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse6" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse6" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv61"></td>
+						<td id="myDiv62"></td>
+						<td id="myDiv63"></td>
+						<td id ="myDiv64"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse7" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse7" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv71"></td>
+						<td id="myDiv72"></td>
+						<td id="myDiv73"></td>
+						<td id ="myDiv74"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse8" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse8" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv81"></td>
+						<td id="myDiv82"></td>
+						<td id="myDiv83"></td>
+						<td id ="myDiv84"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse9" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse9" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv91"></td>
+						<td id="myDiv92"></td>
+						<td id="myDiv93"></td>
+						<td id ="myDiv94"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse10" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse10" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv101"></td>
+						<td id="myDiv102"></td>
+						<td id="myDiv103"></td>
+						<td id ="myDiv104"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse11" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse11" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv111"></td>
+						<td id="myDiv112"></td>
+						<td id="myDiv113"></td>
+						<td id ="myDiv114"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse12" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse12" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv121"></td>
+						<td id="myDiv122"></td>
+						<td id="myDiv123"></td>
+						<td id ="myDiv124"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse13" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse13" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv131"></td>
+						<td id="myDiv132"></td>
+						<td id="myDiv133"></td>
+						<td id ="myDiv134"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse14" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse14"style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv141"></td>
+						<td id="myDiv142"></td>
+						<td id="myDiv143"></td>
+						<td id ="myDiv144"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse15" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse15" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv151"></td>
+						<td id="myDiv152"></td>
+						<td id="myDiv153"></td>
+						<td id ="myDiv154"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse16" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse16" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv161"></td>
+						<td id="myDiv162"></td>
+						<td id="myDiv163"></td>
+						<td id ="myDiv164"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse17" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse17" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv171"></td>
+						<td id="myDiv172"></td>
+						<td id="myDiv173"></td>
+						<td id ="myDiv174"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse18" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse18" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv181"></td>
+						<td id="myDiv182"></td>
+						<td id="myDiv183"></td>
+						<td id ="myDiv184"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse19" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse19" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv191"></td>
+						<td id="myDiv192"></td>
+						<td id="myDiv193"></td>
+						<td id ="myDiv194"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse20" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse20" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv201"></td>
+						<td id="myDiv202"></td>
+						<td id="myDiv203"></td>
+						<td id ="myDiv204"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse21" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse21" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv211"></td>
+						<td id="myDiv212"></td>
+						<td id="myDiv213"></td>
+						<td id ="myDiv214"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse22" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse22" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv221"></td>
+						<td id="myDiv222"></td>
+						<td id="myDiv223"></td>
+						<td id ="myDiv224"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse23" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse23" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+				<table class="table" style="text-align:center;table-layout:fixed;">
+					<tr>
+						<td id="myDiv231"></td>
+						<td id="myDiv232"></td>
+						<td id="myDiv233"></td>
+						<td id ="myDiv234"></td>
+						<td><button class="btn btn-sm" type="button" aria-expanded="false" data-toggle="collapse" data-target="#collapse24" style="color:#2d6da2;background-color: #fff"><span class="glyphicon glyphicon-plus"></span></button></td>
+					</tr>
+				</table>
+				<div class="collapse" id="collapse24" style="background-color:#f2f2f2;padding-left:20px;padding-top:5px ;padding-right:20px;padding-bottom:20px;" >
+				</div>
+			</div>
+			<div class="tab-pane fade container" id="Next7Days" style="text-align:center; background-color:black">
+				<div class="row" style = "color:white">
+					<div class="col-md-2 col-sm-12 col-xs-12">
+					</div>
+					<div class="col-md-1 col-sm-12 col-xs-12" style="background-color:#3786c8;border-radius: 0.5em;margin:5px; text-align:center" data-toggle="modal" data-target="#myModal0">
+						<row>
+							<p id="day01"></p>
+							<p id="day02"></p>
+							<p id="day03"></p>
+							<p>Min<br>Temp</p>
+							<p id="day04"></p>
+							<p>Max<br>Temp</p>
+							<p id="day05"></p>
+						</row>
+					</div>
+						<div class="col-md-1 col-sm-12 col-xs-12" style="background-color:#ef4643;border-radius: 0.5em;margin:5px; text-align:center" data-toggle="modal" data-target="#myModal1">
+						<row>
+							<p id="day11"></p>
+							<p id="day12"></p>
+							<p id="day13"></p>
+							<p>Min<br>Temp</p>
+							<p id="day14"></p>
+							<p>Max<br>Temp</p>
+							<p id="day15"></p>
+						</row>
+					</div>
+						<div class="col-md-1 col-sm-12 col-xs-12" style="background-color:#e88f4a;border-radius: 0.5em;margin:5px; text-align:center" data-toggle="modal" data-target="#myModal2">
+						<row>
+							<p id="day21"></p>
+							<p id="day22"></p>
+							<p id="day23"></p>
+							<p>Min<br>Temp</p>
+							<p id="day24"></p>
+							<p>Max<br>Temp</p>
+							<p id="day25"></p>
+						</row>
+					</div>
+						<div class="col-md-1 col-sm-12 col-xs-12" style="background-color:#b4b232;border-radius: 0.5em;margin:5px; text-align:center" data-toggle="modal" data-target="#myModal3">
+						<row>
+							<p id="day31"></p>
+							<p id="day32"></p>
+							<p id="day33"></p>
+							<p>Min<br>Temp</p>
+							<p id="day34"></p>
+							<p>Max<br>Temp</p>
+							<p id="day35"></p>
+						</row>
+					</div>
+						<div class="col-md-1 col-sm-12 col-xs-12" style="background-color:#9970a8;border-radius: 0.5em;margin:5px; text-align:center" data-toggle="modal" data-target="#myModal4">
+						<row>
+							<p id="day41"></p>
+							<p id="day42"></p>
+							<p id="day43"></p>
+							<p>Min<br>Temp</p>
+							<p id="day44"></p>
+							<p>Max<br>Temp</p>
+							<p id="day45"></p>
+						</row>
+					</div>
+						<div class="col-md-1 col-sm-12 col-xs-12" style="background-color:#f6898a;border-radius: 0.5em;margin:5px; text-align:center" data-toggle="modal" data-target="#myModal5">
+						<row>
+							<p id="day51"></p>
+							<p id="day52"></p>
+							<p id="day53"></p>
+							<p>Min<br>Temp</p>
+							<p id="day54"></p>
+							<p>Max<br>Temp</p>
+							<p id="day55"></p>
+						</row>
+					</div>
+						<div class="col-md-1 col-sm-12 col-xs-12" style="background-color:#d14774;border-radius: 0.5em;margin:5px; text-align:center" data-toggle="modal" data-target="#myModal6" >
+						<row>
+							<p id="day61"></p>
+							<p id="day62" ></p>
+							<p id="day63"></p>
+							<p>Min<br>Temp</p>
+							<p id="day64"></p>
+							<p>Max<br>Temp</p>
+							<p id="day65"></p>
+						</row>
+					</div>
+					<div class="col-md-3 col-sm-12 col-xs-12">
+					</div>
+				</div>
+				<div id="modalshow"></div>
+			</div>
+		</div>
+	</div>
+
+</div>
+
+</div>
+<noscript>
+</body>
+</html>

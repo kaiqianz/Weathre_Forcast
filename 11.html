@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Weather Forecast Web App</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
+    <script src="http://openlayers.org/api/OpenLayers.js"></script>
+    <script src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js"></script>
+
+    <script>
+        
+        $.validator.addMethod(
+            "isSpace", 
+            function (value, element) 
+            {
+                if (value.trim().length == 0) { 
+                    return false;
+                } else {
+                    return true;
+                }
+            },
+            "isSpace" 
+        );
+        
+        $.validator.setDefaults({
+            submitHandler: function () {
+                alert("submitted!");
+            }
+        });
+        
+        
+        $(document).ready(function () {
+
+            $("form").validate({
+                rules: {
+                    street_address: {
+                        required: true,
+                        isSpace: true
+                    }, // simple rule, converted to {required:true}
+                    city: {
+                        required: true,
+                        isSpace: true
+                    },
+                    state: {
+                        required: true,
+                        
+                    }
+                },submitHandler:function(form){
+                    
+                    
+                    $.ajax({
+                    url: "testphp.php",
+                    data: $("form").serialize(),
+                    type: $("form").attr("method"),
+                    dataType: "json",
+                    success: function (result) {
+                        
+                        DecodedJson = result;
+                        reset();
+
+
+                        if ($("#Fahrenheit").is(":checked")) {
+                            ForC = true;
+                        } else {
+                            ForC = false;
+                        }
+
+
+                        tabInit();
+                        rightNow(result);
+                        //$("#City").html(result['latitude']);
+                        next24(result);
+                        next7d(result);
+                        initMap(result);
+
+                        window.fbAsyncInit = function () {
+                            FB.init({
+                                appId: '1642074659386171',
+                                xfbml: true,
+                                status: true,
+                                cookie: true,
+                                version: 'v2.5'
+                            });
+
+                        };
+                        (function (d, s, id) {
+
+                            var js, fjs = d.getElementsByTagName(s)[0];
+                            if (d.getElementById(id)) {
+                                return;
+                            }
+                            js = d.createElement(s);
+                            js.id = id;
+                            js.src = "//connect.facebook.net/en_US/sdk.js";
+                            fjs.parentNode.insertBefore(js, fjs);
+                        }(document, 'script', 'facebook-jssdk'));
+
+
+                        //return true;
+
+                    },
+                    error: function () {
+                        alert("AJAX ERROR!!!");
+                        alert($("form").serialize());
+                       // return false;
+                    }
+                });
+        return false;
+    },
+                messages: {
+                    street_address: {
+                        required: "Please enter the street address",
+                        isSpace: "Please enter the street address"
+                    },
+                    city: {
+                        required: "Please enter the city",
+                        isSpace: "Please enter the city"
+                    },
+                    state: {
+                        required: "Please select a state"
+                    }
+                }
+            });
+
+           /* $("form").submit(function (event) {
+                $.ajax({
+                    url: "testphp.php",
+                    data: $(this).serialize(),
+                    type: $(this).attr("method"),
+                    dataType: "json",
+                    success: function (result) {
+                        //alert($("#myform").serialize());
+                        DecodedJson = result;
+                        reset();
+
+
+                        if ($("#Fahrenheit").is(":checked")) {
+                            ForC = true;
+                        } else {
+                            ForC = false;
+                        }
+
+
+                        tabInit();
+                        rightNow(result);
+                        //$("#City").html(result['latitude']);
+                        next24(result);
+                        next7d(result);
+                        initMap(result);
+
+                        window.fbAsyncInit = function () {
+                            FB.init({
+                                appId: '1642074659386171',
+                                xfbml: true,
+                                status: true,
+                                cookie: true,
+                                version: 'v2.5'
+                            });
+
+                        };
+                        (function (d, s, id) {
+
+                            var js, fjs = d.getElementsByTagName(s)[0];
+                            if (d.getElementById(id)) {
+                                return;
+                            }
+                            js = d.createElement(s);
+                            js.id = id;
+                            js.src = "//connect.facebook.net/en_US/sdk.js";
+                            fjs.parentNode.insertBefore(js, fjs);
+                        }(document, 'script', 'facebook-jssdk'));
+
+
+                        return true;
+
+                    },
+                    error: function () {
+                        alert("AJAX ERROR!!!");
+                        alert($("#myform").serialize());
+                        return false;
+                    }
+                });
+                //event.preventDefault();
+                return false;
+            });*/
+
+            $("#reset").click(function () {
+                reset();
+            });
+
+
+            $(document).on("click", "#fbShare", function (e) {
+
+                var picstring = weatherImg(DecodedJson['currently']['icon']);
+                var descriptstring = dataNull(DecodedJson['currently']['summary']) + ", ";
+
+                if (DecodedJson['currently']['temperature']) {
+                    descriptstring = "N.A.";
+                } else {
+                    descriptstring = Math.round(DecodedJson['currently']['temperature']);
+
+                    if (ForC == true) {
+                        descriptstring += "&deg;F";
+                    } else {
+                        descriptstring += "&deg;C";
+                    }
+                }
+
+                FB.ui({
+                    method: 'feed',
+                    name: 'Current Weather in ' + $("#City").val() + ", " + $("#State").val(),
+                    link: 'http://forecast.io/',
+                    picture: picstring,
+                    caption: 'WEATHER INFORMATION FROM FORCAST.IO',
+                    description: descriptstring,
+                    message: ''
+                });
+                e.preventDefault();
+
+            });
+        });
+
+
+        function dataNull(rawdata) {
+
+            if (rawdata == null) {
+                return "N.A.";
+            } else {
+                return rawdata;
+            }
+
+        }
+
+        function tabInit() {
+            $("#tab").html("<div class=\"col-md-12\"><hr><ul class=\"nav nav-tabs\"><li style=\"background-color: #dddddd\" class=\"active\"><a class=\"a_content\" data-toggle=\"tab\" href=\"#rightNow\">Right Now</a></li><li style=\"background-color: #dddddd\"><a class=\"a_content\" data-toggle=\"tab\" href=\"#next24Hrs\">Next 24 Hours</a></li><li style=\"background-color: #dddddd\"><a class=\"a_content\" data-toggle=\"tab\" href=\"#next7Days\">Next 7 Days</a></li></ul></div>");
+
+        }
+
+        function reset() {
+            $(".data").empty();
+            $("#rightNow").addClass("in active");
+            $("#next24Hrs").removeClass("in active");
+            $("#next7Days").removeClass("in active");
+
+            //$("form").trigger("reset");
+
+        }
+
+        function rightNow(resultAjax) {
+
+            var htmlString;
+            htmlString = "<div class=\"col-md-6\" style=\"padding-right:0px;\"><div style=\"background: #fd5c5c\" class=\"col-md-12 col-xs-12\"><div class=\"col-md-offset-1 col-xs-offset-3 col-md-4 col-xs-6\"><img class=\"img-responsive\" src=\"";
+            htmlString += weatherImg(resultAjax['currently']['icon']) + "\"></div>";
+            htmlString += "<div class=\" col-md-offset-1 col-md-6 col-xs-12\" style=\"text-align: center; padding-right:0px; padding-left: 0px\"><div class=\"row\"><div class=\"col-md-offset-0 col-xs-offset-0 col-md-12 col-xs-12\" style=\"padding-right:0px; padding-left: 0px\"><p style=\"color:white; font-weight: bold;\">";
+            htmlString += dataNull(resultAjax['currently']['summary']) + " in " + $("#City").val() + ", " + $("#State").val() + "</p></div></div>";
+            htmlString += "<div class=\"row\"><div class=\"col-xs-offset-0 col-md-offset-2 col-md-9 col-xs-12\"><p style=\"color:white; font-size:60px; font-weight:bold; text-align: center\">";
+            htmlString += Math.round(resultAjax['currently']['temperature']) + "<span style=\"font-size:20px; font-weight:lighter;vertical-align:text-top\">";
+            if (ForC == true) {
+                htmlString += "&deg F";
+            } else {
+                htmlString += "&deg C";
+            }
+
+            htmlString += "</span></p></div></div><div class=\"row\"><div class=\"col-md-offset-4 col-xs-offset-4 col-md-4 col-xs-4\" style=\"padding-right:0px; padding-left: 0px;\"><p style=\"color:blue; font-weight: bold; padding-right:0px; padding-left: 0px; text-align:center\">L: ";
+            htmlString += Math.round(resultAjax['daily']['data'][0]['temperatureMin']) + "&deg<span style=\"color:black;\">| </span><span style=\"color:green;\">H: ";
+            htmlString += Math.round(resultAjax['daily']['data'][0]['temperatureMax']) + "&deg</span></p></div>";
+            htmlString += "<div class=\"col-md-offset-1 col-xs-offset-1 col-md-3 col-xs-3\"><img id=\"fbShare\" style=\"vertical-align:text-bottom;padding:0px;background: rgba(0%,0%,0%,0); border: none\" class=\"btn btn-default img-responsive\" src=\"http://cs-server.usc.edu:45678/hw/hw8/images/fb_icon.png\"></div></div></div></div>";
+            htmlString += "<div class=\"col-md-12 table-responsive\" style=\"padding-right:0px; padding-left: 0px;\"><table style=\"font-weight: bold;\" class=\"table\"><tr class=\"tr_firstcolor\"><td>Preciptation</td><td>";
+
+            if (resultAjax['currently']['precipIntensity'] == null) {
+                htmlString += "N.A.";
+            } else {
+
+                var precipIntensity = resultAjax['currently']['precipIntensity'];
+                if (ForC == false) {
+                    precipIntensity = precipIntensity * 0.0394;
+                }
+
+                if (precipIntensity < 0.002) {
+                    htmlString += 'None';
+                } else if (precipIntensity >= 0.02 && precipIntensity < 0.017) {
+                    htmlString += 'Very Light';
+                } else if (precipIntensity >= 0.017 && precipIntensity < 0.1) {
+                    htmlString += 'Light';
+                } else if (precipitation >= 0.1 && precipIntensity < 0.4) {
+                    htmlString += 'Moderate';
+                } else if (precipIntensity >= 0.4) {
+                    htmlString += 'Heavy';
+                }
+            }
+
+            htmlString += "</td></tr><tr class=\"tr_secondcolor\"> <td>Chance of Rain</td><td>";
+
+            if (resultAjax['currently']['precipProbability'] == null) {
+                htmlString += "N.A.";
+            } else {
+
+                htmlString += resultAjax['currently']['precipProbability'] * 100 + "%";
+            }
+            htmlString += "</td></tr><tr class=\"tr_firstcolor\"><td>Wind Speed</td><td>";
+
+            if (resultAjax['currently']['windSpeed'] == null) {
+                htmlString += "N.A.";
+            } else {
+
+                htmlString += resultAjax['currently']['windSpeed'];
+                if (ForC == true) {
+                    htmlString += "mph";
+                } else {
+                    htmlString += "m/s";
+                }
+            }
+
+
+            htmlString += "</td></tr><tr class=\"tr_secondcolor\"><td>Dew Point</td><td>";
+
+            if (resultAjax['currently']['dewPoint'] == null) {
+                htmlString += "N.A.";
+            } else {
+
+                htmlString += resultAjax['currently']['dewPoint'] + "&deg";
+                if (ForC == true) {
+                    htmlString += " F";
+                } else {
+                    htmlString += " C";
+                }
+            }
+            htmlString += "</td></tr><tr class=\"tr_firstcolor\"><td>Humidity</td><td>";
+            htmlString += Math.round(resultAjax['currently']['humidity'] * 100) + "%</td></tr>";
+            htmlString += "<tr class=\"tr_secondcolor\"><td>Visibility</td><td>";
+
+            if (resultAjax['currently']['visibility'] == null) {
+                htmlString += "N.A.";
+            } else {
+
+                htmlString += resultAjax['currently']['visibility'];
+                if (ForC == true) {
+                    htmlString += " mi";
+                } else {
+                    htmlString += " km";
+                }
+            }
+
+            htmlString += "</td></tr><tr class=\"tr_firstcolor\"><td>Sunrise</td><td>";
+
+            htmlString += changeInto12(resultAjax['daily']['data'][0]['sunriseTime']) + "</td></tr>";
+
+            htmlString += "<tr class=\"tr_secondcolor\"><td>Sunset</td><td>";
+
+            htmlString += changeInto12(resultAjax['daily']['data'][0]['sunsetTime']) + "</td></tr>";
+            htmlString += "</table></div></div><div class=\"col-md-6\" id=\"myMap\" style=\"height:467px; \"></div>";
+            $("#rightNow").html(htmlString);
+        }
+
+        function next24(resultAjax) {
+            var htmlString;
+            htmlString = "<div class=\"col-md-12\"><table class=\"table\"><thead style=\"background-color:#22369d; color: white;\"><tr><th style=\"text-align:center\">Time</th><th style=\"text-align:center\">Summary</th><th style=\"text-align:center\">Cloud Cover</th><th style=\"text-align:center\">Temp(&deg";
+            if (ForC == true) {
+                htmlString += "F";
+            } else {
+                htmlString += "C";
+            }
+            htmlString += ")</th><th style=\"text-align:center\">View Details</th></tr></thead><tbody style=\"background-color: white;text-align:center\">";
+            for (var i = 0; i < 24; i++) {
+                htmlString += "<tr><td>";
+                htmlString += changeInto12((resultAjax['hourly']['data'][i]['time']));
+                htmlString += "</td><td><img src=\"" + weatherImg(resultAjax['hourly']['data'][i]['icon']) + "\" height=\"100px\"></td><td>";
+                htmlString += Math.round(resultAjax['hourly']['data'][i]['cloudCover'] * 100) + "%";
+                htmlString += "</td><td>" + resultAjax['hourly']['data'][i]['temperature'] + "</td><td>";
+                htmlString += "<button type=\"button\" class=\"btn btn-default\" data-toggle=\"collapse\" style=\"border:none\" data-target=\"#collapse";
+                htmlString += i + "\"><span style=\"color:#22369d\" class=\"glyphicon glyphicon-plus\"></span> </button></td></tr>";
+                htmlString += "<td style=\"border-top: none; padding-left:0px; padding-right:0px; \" colspan=\"5\"><div id=\"collapse";
+                htmlString += i + "\" class=\"panel-collapse collapse\" style=\"background-color:#dddddd;\"><div class=\"panel-body\"><table class=\"table\"><thead style=\"background-color:white; color: black;\"><tr><th style=\"text-align:center\">Wind</th><th style=\"text-align:center\">Humidity</th><th style=\"text-align:center\">Visibility</th><th style=\"text-align:center\">Pressure</th></tr></thead><tbody style=\"background-color: #dddddd;text-align:center\"><tr><td>";
+
+                if (resultAjax['hourly']['data'][i]['windSpeed'] == null) {
+                    htmlString += "N.A.";
+                } else {
+
+                    htmlString += resultAjax['hourly']['data'][i]['windSpeed'];
+                    if (ForC == true) {
+                        htmlString += "mph";
+                    } else {
+                        htmlString += "m/s";
+                    }
+                }
+
+                htmlString += "</td><td>";
+                htmlString += Math.round(resultAjax['hourly']['data'][i]['humidity'] * 100);
+                htmlString += "%</td><td>";
+
+                if (resultAjax['hourly']['data'][i]['visibility'] == null) {
+                    htmlString += "N.A.";
+                } else {
+
+                    htmlString += resultAjax['hourly']['data'][i]['visibility'];
+                    if (ForC == true) {
+                        htmlString += "mi";
+                    } else {
+                        htmlString += "km";
+                    }
+                }
+
+                htmlString += "</td><td>";
+
+                if (resultAjax['hourly']['data'][i]['pressure'] == null) {
+                    htmlString += "N.A.";
+                } else {
+
+                    htmlString += resultAjax['hourly']['data'][i]['pressure'];
+                    if (ForC == true) {
+                        htmlString += "mb";
+                    } else {
+                        htmlString += "hPa";
+                    }
+                }
+
+                htmlString += "</td></tr></tbody></table></div><div class=\"panel-footer\" style=\"background-color:white;\"></div></div></td>";
+
+            }
+            htmlString += "</tbody></table></div>";
+            $("#next24Hrs").html(htmlString);
+        }
+
+        function next7d(resultAjax) {
+            var htmlString;
+            var color = ["blue", "red", "orange", "#789b40", "#a173d0", "#e88c8c", "#d60e72"];
+            htmlString = "<div class=\"col-md-12 \"><div class=\"col-md-12 col-xs-0\" style=\"background-color:black\">"
+                /*<div class=\"col-md-offset-2 col-xs-offset-0 col-md-1 col-xs-12 tab3label\"><br><button type=\"button\" class=\"btn-block btn btn-default  tab3\" style=\"background-color:";
+                            htmlString += color[0] + ";\"";
+                            htmlString += " onclick=\"\">";
+                            htmlString += "<div><p>" + changeIntoDay(resultAjax['daily']['data'][1]['time'] * 1000) + "</p><p>";
+                            htmlString += changeIntoDate(resultAjax['daily']['data'][1]['time'] * 1000);
+                            htmlString += "</p><img height=\"60px\" src=\"" +  weatherImg(resultAjax['daily']['data'][1]['icon']);
+                            htmlString += "\"><p>Min</p><p>Temp</p><p style=\"font-size:30px\">";
+                            htmlString += Math.round(resultAjax['daily']['data'][1]['temperatureMin']) + "&deg</p><p>";
+                            htmlString +="Max</p><p>Temp</p><p style=\"font-size:30px\">";
+                            htmlString += Math.round(resultAjax['daily']['data'][1]['temperatureMax']) + "&deg</p></div></button></div>";*/
+            for (var i = 0; i < 7; i++) {
+                var day = changeIntoDay(resultAjax['daily']['data'][i + 1]['time']);
+                htmlString += "<div class=\"";
+
+                if (i == 0) {
+                    htmlString += "col-md-offset-2 col-xs-offset-0";
+                }
+
+                htmlString += " col-md-1 col-xs-12 tab3label\"><br><button type=\"button\" class=\"btn-block btn btn-default  tab3\" style=\"background-color:";
+                htmlString += color[i] + ";";
+                if (day == "Wednesday") {
+                    htmlString += "padding-right:2px; padding-left: 2px\"";
+
+                } else {
+                    htmlString += "\"";
+                }
+
+                htmlString += " data-toggle=\"modal\" data-target=\"#myModal" + i + "\">";
+                htmlString += "<div><p>" + day + "</p><p>";
+                htmlString += changeIntoDate(resultAjax['daily']['data'][i + 1]['time']);
+                htmlString += "</p><img height=\"60px\" src=\"" + weatherImg(resultAjax['daily']['data'][i + 1]['icon']);
+                htmlString += "\"><p>Min</p><p>Temp</p><p style=\"font-size:30px\">";
+                htmlString += Math.round(resultAjax['daily']['data'][i + 1]['temperatureMin']) + "&deg</p><p>";
+                htmlString += "Max</p><p>Temp</p><p style=\"font-size:30px\">";
+                htmlString += Math.round(resultAjax['daily']['data'][i + 1]['temperatureMax']) + "&deg</p></div></button><br></div>";
+
+                htmlString += "<div class=\"modal fade\" id=\"myModal" + i + "\" role=\"dialog\">";
+                htmlString += "<div class=\"modal-dialog modal-lg\"><div class=\"modal-content\"><div class=\"modal-header\"><button type=\"button\" class=\"close\" data-dismiss=\"modal\">&times;</button><h4 style=\"font-weight:bolder;\" class=\"modal-title\">";
+                htmlString += "Weather in " + $("#City").val() + " on " + changeIntoDate(resultAjax['daily']['data'][i + 1]['time']) + "</h4></div>";
+                htmlString += "<div class=\"modal-body\" style=\"text-align:center\"><p><img height=\"200px\" src=\"";
+                htmlString += weatherImg(resultAjax['daily']['data'][i + 1]['icon']);
+                htmlString += "\"></p><p style=\"font-weight:bolder; font-size:30px\">";
+                htmlString += day + ":<span style=\"color:orange\"> ";
+                htmlString += dataNull(resultAjax['daily']['data'][i + 1]['summary']) + "</span></p><div class=\"row\">";
+                htmlString += "<div class=\"col-md-4\"><p style=\"font-weight:bolder; font-size:20px\">Sunrise Time</p><p>";
+                htmlString += changeInto12(resultAjax['daily']['data'][i + 1]['sunriseTime']);
+                htmlString += "</p></div><div class=\"col-md-4\"><p style=\"font-weight:bolder; font-size:20px\">Sunset Time</p><p>";
+                htmlString += changeInto12(resultAjax['daily']['data'][i + 1]['sunsetTime']);
+                htmlString += "</p></div><div class=\"col-md-4\"><p style=\"font-weight:bolder; font-size:20px\">Humidity</p><p>";
+                htmlString += Math.round(resultAjax['daily']['data'][i + 1]['humidity'] * 100);
+                htmlString += "%</p></div><div class=\"col-md-4\"><p style=\"font-weight:bolder; font-size:20px\">Wind Speed</p><p>";
+
+                if (resultAjax['daily']['data'][i + 1]['windSpeed'] == null) {
+                    htmlString += "N.A.";
+                } else {
+                    htmlString += resultAjax['daily']['data'][i + 1]['windSpeed'];
+                    if (ForC == true) {
+                        htmlString += "mph";
+                    } else {
+                        htmlString += "m/s";
+                    }
+                }
+
+                htmlString += "</p></div><div class=\"col-md-4\"><p style=\"font-weight:bolder; font-size:20px\">Visibility</p><p>";
+                //test
+
+
+                if (resultAjax['daily']['data'][i + 1]['visibility'] == null) {
+                    htmlString += "N.A.";
+                } else {
+                    htmlString += resultAjax['daily']['data'][i + 1]['visibility'];
+                    if (ForC == true) {
+                        htmlString += "mi";
+                    } else {
+                        htmlString += "km";
+                    }
+                }
+
+                //test
+
+
+                //test            //htmlString += resultAjax['daily']['data'][i + 1]['visibility'];
+                /*        if (ForC == true) {
+                            htmlString += "mi";
+                        } else {
+                            htmlString += "km";
+                        }*/
+                htmlString += "</p></div><div class=\"col-md-4\"><p style=\"font-weight:bolder; font-size:20px\">Pressure</p><p>";
+
+                if (resultAjax['daily']['data'][i + 1]['pressure'] == null) {
+
+                    htmlString += "N.A.";
+                } else {
+                    htmlString += resultAjax['daily']['data'][i + 1]['pressure'];
+                    if (ForC == true) {
+                        htmlString += "mb";
+                    } else {
+                        htmlString += "hPa";
+                    }
+                }
+
+                htmlString += "</p></div></div></div><div class=\"modal-footer\"><button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">Close</button></div></div></div></div>";
+
+            }
+            htmlString += "</div></div>";
+
+            $("#next7Days").html(htmlString);
+        }
+
+        function weatherImg(icon) {
+
+            var weatherIcon = "http://cs-server.usc.edu:45678/hw/hw8/images/";
+
+            if (icon == "clear-day") {
+                weatherIcon += 'clear.png';
+            } else if (icon == "clear-night") {
+                weatherIcon += 'clear_night.png';
+            } else if (icon == "rain") {
+                weatherIcon += 'rain.png';
+            } else if (icon == "snow") {
+                weatherIcon += 'snow.png';
+            } else if (icon == "sleet") {
+                weatherIcon += 'sleet.png';
+            } else if (icon == "wind") {
+                weatherIcon += 'wind.png';
+            } else if (icon == "fog") {
+                weatherIcon += 'fog.png';
+            } else if (icon == "cloudy") {
+                weatherIcon += 'cloudy.png';
+            } else if (icon == "partly-cloudy-day") {
+                weatherIcon += 'cloud_day.png';
+            } else if (icon == "partly-cloudy-night") {
+                weatherIcon += 'cloud_night.png';
+            } else {
+                weatherIcon = 'https://media2.wnyc.org/i/620/372/l/80/1/blackbox.jpeg';
+            }
+
+            return weatherIcon;
+
+        }
+
+        function changeIntoDate(unixTime) {
+
+            if (unixTime != null) {
+                unixTime = unixTime * 1000;
+                var d = new Date(unixTime);
+                var timeString;
+                var month = new Array("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                    "July", "Ang", "Sep", "Oct", "Nov", "Dec");
+                timeString = month[d.getMonth()] + " " + d.getDate();
+
+                return timeString;
+            } else {
+                return "N.A."
+            }
+
+        }
+
+        function changeIntoDay(unixTime) {
+
+            if (unixTime != null) {
+                unixTime = unixTime * 1000;
+                var d = new Date(unixTime);
+                var day;
+                var timeString = d.getDay();
+
+                switch (timeString) {
+                case 0:
+                    day = "Sunday";
+                    break;
+                case 1:
+                    day = "Monday";
+                    break;
+                case 2:
+                    day = "Tuesday";
+                    break;
+                case 3:
+                    day = "Wednesday";
+                    break;
+                case 4:
+                    day = "Thursday";
+                    break;
+                case 5:
+                    day = "Friday";
+                    break;
+                case 6:
+                    day = "Saturday";
+                    break;
+                }
+                return day;
+            } else {
+                return "N.A."
+            }
+
+        }
+
+        function changeInto12(unixTime) {
+            if (unixTime != null) {
+                unixTime = unixTime * 1000;
+                unixTime = unixTime + DecodedJson['offset'] * 3600 * 1000;
+                var d = new Date(unixTime);
+
+                // d = d.getUTCDate();
+
+                var timeString;
+
+                if (((d.getUTCHours()) / 12) < 1) { //AM
+                    if ((d.getUTCHours()) % 12 < 10) {
+                        timeString = "0" + (d.getUTCHours()) % 12 + ":";
+                    } else {
+                        timeString = (d.getUTCHours()) % 12 + ":";
+                    }
+
+                    if (d.getUTCMinutes() < 10) {
+                        timeString += "0" + d.getUTCMinutes();
+                    } else {
+                        timeString += d.getUTCMinutes();
+                    }
+                    timeString += " AM";
+                } else { //getHours())/12 > 1
+
+                    if (((d.getUTCHours()) % 12) == 0) {
+                        timeString = "12:";
+                    } else {
+                        if ((d.getUTCHours()) % 12 < 10) {
+                            timeString = "0" + (d.getUTCHours()) % 12 + ":";
+                        } else {
+                            timeString = (d.getUTCHours()) % 12 + ":";
+                        }
+                    }
+                    if (d.getUTCMinutes() < 10) {
+                        timeString += "0" + d.getUTCMinutes();
+                    } else {
+                        timeString += d.getUTCMinutes();
+                    }
+                    timeString += " PM";
+                }
+
+                return timeString;
+            } else {
+                return "N.A."
+            }
+
+        }
+
+        function initMap(resultAjax) {
+            var map = new OpenLayers.Map("myMap");
+            // Create OSM overlays
+            var mapnik = new OpenLayers.Layer.OSM();
+            var layer_cloud = new OpenLayers.Layer.XYZ(
+                "clouds",
+                "http://${s}.tile.openweathermap.org/map/clouds/${z}/${x}/${y}.png", {
+                    isBaseLayer: false,
+                    opacity: 0.4,
+                    sphericalMercator: true
+                }
+            );
+            var layer_precipitation = new OpenLayers.Layer.XYZ(
+                "precipitation",
+                "http://${s}.tile.openweathermap.org/map/precipitation/${z}/${x}/${y}.png", {
+                    isBaseLayer: false,
+                    opacity: 0.4,
+                    sphericalMercator: true
+                }
+            );
+            map.addLayers([mapnik, layer_precipitation, layer_cloud]);
+            map.setCenter(new OpenLayers.LonLat(resultAjax['longitude'], resultAjax['latitude']).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913")), 9);
+        }
+    </script>
+
+    <style type="text/css">
+        label.error {
+            color: red;
+        }
+        
+        .nav-tabs li a.a_content {
+            color: #22369d;
+        }
+        
+        .nav-tabs li.active a.a_content {
+            background-color: #22369d;
+            color: white;
+        }
+        
+        table tr.tr_firstcolor {
+            background-color: #ffffff;
+        }
+        
+        table tr.tr_secondcolor {
+            background-color: #e9d2fa;
+        }
+        
+        button.tab3 {
+            color: white;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        div.tab3label {
+            padding-left: 0px;
+            padding-right: 10px;
+        }
+    </style>
+
+</head>
+
+<body style="background: url('http://cs-server.usc.edu:45678/hw/hw8/images/bg.jpg') no-repeat fixed center; background-size:cover;">
+    <h1 style="font-weight: bold; text-align:center;">Forecast Search</h1>
+    <!--<fieldset style="width:430px">-->
+    <div id="fb-root"></div>
+
+    <div class="container">
+        <div class="row">
+            <div class=" col-md-12">
+                <div class=" col-md-12" style="background: rgba(0%,10%,20%,0.2); ">
+                    <br>
+                    <div class="row">
+                        <form class=" col-md-12" role="form">
+
+                            <div class="form-group col-md-3">
+                                <label for="street_address"><font color="white"> Street Address:</font><font color="red">*</font></label>
+                                <br>
+                                <input required id="Street Address" class="form-control" type="text" name="street_address" placeholder="Enter street address">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="city"><font color="white">City:</font><font color="red">*</font></label>
+                                <br>
+                                <input required id="City" type="text" name="city" class="form-control" placeholder="Enter the city name">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label for="state"><font color="white">State:</font><font color="red">*</font></label>
+                                <br>
+                                <select required class="form-control" id="State" name="state">
+                                    <option value="" selected hidden>Select your state...</option>
+                                    <option value="AL">Alabama</option>
+                                    <option value="AK">Alaska</option>
+                                    <option value="AZ">Arizona</option>
+                                    <option value="AR">Arkansas</option>
+                                    <option value="CA">California</option>
+                                    <option value="CO">Colorado</option>
+                                    <option value="CT">Connecticut</option>
+                                    <option value="DE">Delaware</option>
+                                    <option value="DC">District Of Columbia</option>
+                                    <option value="FL">Florida</option>
+                                    <option value="GA">Georgia</option>
+                                    <option value="HI">Hawaii</option>
+                                    <option value="ID">Idaho</option>
+                                    <option value="IL">Illinois</option>
+                                    <option value="IN">Indiana</option>
+                                    <option value="IA">Iowa</option>
+                                    <option value="KS">Kansas</option>
+                                    <option value="KY">Kentucky</option>
+                                    <option value="LA">Louisiana</option>
+                                    <option value="ME">Maine</option>
+                                    <option value="MD">Maryland</option>
+                                    <option value="MA">Massachusetts</option>
+                                    <option value="MI">Michigan</option>
+                                    <option value="MN">Minnesota</option>
+                                    <option value="MS">Mississippi</option>
+                                    <option value="MO">Missouri</option>
+                                    <option value="MT">Montana</option>
+                                    <option value="NE">Nebraska</option>
+                                    <option value="NV">Nevada</option>
+                                    <option value="NH">New Hampshire</option>
+                                    <option value="NJ">New Jersey</option>
+                                    <option value="NM">New Mexico</option>
+                                    <option value="NY">New York</option>
+                                    <option value="NC">North Carolina</option>
+                                    <option value="ND">North Dakota</option>
+                                    <option value="OH">Ohio</option>
+                                    <option value="OK">Oklahoma</option>
+                                    <option value="OR">Oregon</option>
+                                    <option value="PA">Pennsylvania</option>
+                                    <option value="RI">Rhode Island</option>
+                                    <option value="SC">South Carolina</option>
+                                    <option value="SD">South Dakota</option>
+                                    <option value="TN">Tennessee</option>
+                                    <option value="TX">Texas</option>
+                                    <option value="UT">Utah</option>
+                                    <option value="VT">Vermont</option>
+                                    <option value="VA">Virginia</option>
+                                    <option value="WA">Washington</option>
+                                    <option value="WV">West Virginia</option>
+                                    <option value="WI">Wisconsin</option>
+                                    <option value="WY">Wyoming</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group col-xs-12 col-md-3">
+                                <label for="degree"><font color="white">Degree:</font><font color="red">*</font></label>
+                                <br>
+                                <div class="radio-inline">
+                                    <input id="Fahrenheit" name="degree" checked=checked value="Fahrenheit" type="radio"><font color="white">Fahrenheit</font>
+                                </div>
+                                <div class="radio-inline">
+                                    <input id="Celsius" name="degree" value="Celsius" type="radio"><font color="white">Celsius</font>
+                                </div>
+                            </div>
+                            <br>
+                            <button type="submit" class="btn btn-primary form-group col-xs-offset-6 col-md-offset-0 col-xs-3 col-md-1" name="Search" value="Search"><span class="glyphicon glyphicon-search "></span> Search</button>
+
+                            <button id="reset" type="reset" class="btn btn-default form-group col-xs-3 col-md-1"><span class="glyphicon glyphicon-refresh"></span> &nbsp;Clear</button>
+
+                            <!--<div class=" form-group col-xs-offset-6 col-md-offset-0 col-xs-3 col-md-1">
+                <button type="submit" class="btn btn-primary " name="Search" value="Search"><span class="glyphicon glyphicon-search "></span> Search</button>
+                </div >
+                <div class="col-xs-3 col-md-1">
+
+                <button type="button" class="btn btn-default form-group" onclick=""><span class="glyphicon glyphicon-refresh"></span> &nbsp;Clear</button>
+                    </div>-->
+
+                        </form>
+                    </div>
+
+                    <div class="row">
+                        <div class=" col-md-offset-7 col-xs-offset-4 col-md-3 col-xs-5" style="padding-right:0px; padding-left: 0px">
+                            <p style="color:white;text-align:right;">
+                                <br>Powered by:</p>
+                        </div>
+                        <div class=" col-md-2 col-xs-3" style="padding-right:0px; padding-left: 0px">
+                            <a href="http://forecast.io/"><img class="img-responsive" src="http://cs-server.usc.edu:45678/hw/hw8/images/forecast_logo.png"></a>
+                        </div>
+
+
+
+                        <!-- <div class=" col-md-offset-8 col-xs-offset-6 col-md-2 col-xs-3" style="text-align:right;margin-right:-20px; margin-top:2%;"><font color="white">Powered by:</font>
+                            <a href="http://forecast.io/"></a>
+                        </div>
+                        <div class="col-md-2 col-xs-3" style="margin-left:-10px;"><img class="img-responsive" src="http://cs-server.usc.edu:45678/hw/hw8/images/forecast_logo.png"></div>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab" class="data row">
+
+        </div>
+        <div class="tab-content">
+            <div id="rightNow" class="data row tab-pane fade in active">
+            </div>
+
+            <div id="next24Hrs" class="data row tab-pane fade">
+
+            </div>
+
+            <div id="next7Days" class="data row tab-pane fade">
+
+
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+    <!--<div class="container">
+  <form role="form">
+    <div class="form-group">
+      <div class="col-xs-1">
+        <label for="ex1">col-xs-1</label>
+        <input class="form-control" id="ex1" type="text">
+      </div>
+      <div class="col-xs-3">
+        <label for="ex2">col-xs-3</label>
+        <input class="form-control" id="ex2" type="text">
+      </div>
+      <div class="col-xs-4">
+        <label for="ex3">col-xs-4</label>
+        <input class="form-control" id="ex3" type="text">
+      </div>
+    </div>
+  </form>
+</div>-->
+</body>
+
+</html>
